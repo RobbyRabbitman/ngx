@@ -1,1 +1,1 @@
-export * from './lib/ngxs-testing/ngxs-testing.component';
+export * from './lib';
