@@ -2,6 +2,7 @@ import {
   APP_INITIALIZER,
   ModuleWithProviders,
   NgModule,
+  importProvidersFrom,
   inject,
 } from '@angular/core';
 import { NgxsModule, Store } from '@ngxs/store';
@@ -17,6 +18,8 @@ import { NgxsTestingController } from './testing-controller';
  * @param options
  * @param defaultState
  * @returns the nessecary providers for mocking selectors.
+ *
+ * @see {@link NgxsTestingModule.forRoot} for ngModules based setup
  */
 export const provideNgxsTesting = <T>(
   states?: StateClass[],
@@ -24,7 +27,6 @@ export const provideNgxsTesting = <T>(
   defaultState?: Partial<T>
 ) => [
   { provide: Store, useClass: MockStore },
-  { provide: ORIGINAL_STORE, useClass: Store },
   MockSelectors,
   NgxsTestingController,
   {
@@ -36,11 +38,14 @@ export const provideNgxsTesting = <T>(
     },
     multi: true,
   },
-  ...(NgxsModule.forRoot(states, options).providers?.filter(
-    (p) => p !== Store
-  ) ?? []),
+  { provide: ORIGINAL_STORE, useClass: Store },
+  importProvidersFrom(NgxsModule.forRoot(states, options)),
 ];
 
+/**
+ * In order to align with the {@link NgxsModule.forRoot} method there is an equivalent {@link NgxsTestingModule.forRoot} method.
+ * @see {@link provideNgxsTesting} for environment provider setup.
+ */
 @NgModule()
 export class NgxsTestingModule {
   /**
