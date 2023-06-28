@@ -1,5 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { ActionType, getSelectorMetadata, Store } from '@ngxs/store';
+import {
+  ActionType,
+  getSelectorMetadata,
+  StateToken,
+  Store,
+} from '@ngxs/store';
 import { SelectorFunc, TypedSelector } from '@ngxs/store/src/selectors';
 import { concat } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -25,7 +30,10 @@ export class MockSelectors {
    */
   public get<T>(selector: TypedSelector<T>) {
     const meta = getSelectorMetadata(selector);
-    const key = meta.selectorName ?? meta.originalFn?.toString();
+    const key =
+      meta.selectorName ??
+      meta.originalFn?.toString() ??
+      (selector instanceof StateToken ? selector : undefined);
     if (key === undefined)
       throw new Error(
         `NGXS Testing: the selector ${selector} can't be mocked :(`
