@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngxs/store';
 import { throwNgxsTestingError } from './error';
@@ -18,8 +19,10 @@ export const setStore = (() => {
 
   let snapshots = [] as unknown[];
 
+  const injectStore = () => TestBed.inject(Store, undefined) ?? inject(Store);
+
   const fn = <T>(state: T) => {
-    const store = TestBed.inject(Store);
+    const store = injectStore();
 
     const cloned = structuredClone(state);
 
@@ -44,7 +47,7 @@ export const setStore = (() => {
       ? throwNgxsTestingError(
           'tried to pop a snapshot but there are no snapshots'
         )
-      : TestBed.inject(Store).reset(snapshots[--index]);
+      : injectStore().reset(snapshots[--index]);
 
   /**
    * Resets the value of the {@link Store} to undefined and deletes any snapshots.
@@ -54,7 +57,7 @@ export const setStore = (() => {
 
     snapshots = [];
 
-    TestBed.inject(Store).reset(undefined);
+    injectStore().reset(undefined);
   };
 
   return fn;
