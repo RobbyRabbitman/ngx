@@ -35,7 +35,7 @@ export class MockSelectors {
       meta.selectorName ??
       meta.originalFn?.toString() ??
       (selector instanceof StateToken ? selector : undefined);
-    if (key === undefined)
+    if (key == null)
       throwNgxsTestingError('not able to mock selector', selector);
     if (!this._selectors.has(key)) this._selectors.set(key, new MockSelector());
     return this._selectors.get(key) as MockSelector<T>;
