@@ -13,11 +13,10 @@ describe('mockSelector', () => {
         () => 'someOtherValue'
       );
 
-      beforeEach(
-        async () =>
-          await TestBed.configureTestingModule({
-            providers: provideNgxsTesting(),
-          }).compileComponents()
+      beforeEach(() =>
+        TestBed.configureTestingModule({
+          providers: provideNgxsTesting(),
+        }).compileComponents()
       );
 
       it('should be mockable', () => {

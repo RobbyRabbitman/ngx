@@ -1,6 +1,7 @@
 /* eslint-disable */
 export default {
   displayName: 'ngxs-testing',
+  testEnvironment: './FixJSDOMEnvironment.ts',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/libs/ngxs-testing',
