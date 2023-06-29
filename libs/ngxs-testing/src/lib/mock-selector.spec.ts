@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { StateToken, Store, createSelector } from '@ngxs/store';
-import { provideNgxsTesting } from '../lib/providers';
-import { mockSelector } from '../lib/testing-controller';
+import { provideNgxsTesting } from './providers';
+import { mockSelector } from './testing-controller';
 
 describe('mockSelector', () => {
   describe("when mocking 'createSelector' selectors", () => {

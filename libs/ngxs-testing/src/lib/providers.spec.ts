@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngxs/store';
-import { MockStore } from '../lib/mock-store';
-import { ORIGINAL_STORE } from '../lib/original-store';
-import { NgxsTestingModule, provideNgxsTesting } from '../lib/providers';
+import { MockStore } from './mock-store';
+import { ORIGINAL_STORE } from './original-store';
+import { NgxsTestingModule, provideNgxsTesting } from './providers';
 
 describe('provideNgxsTesting', () => {
   it("should add all providers from ngxs besides 'Store'", () => {
