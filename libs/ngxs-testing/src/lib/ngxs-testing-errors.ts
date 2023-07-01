@@ -1,6 +1,8 @@
 export const NGXS_TESTING_ERRORS = {
   "The selector {{}} can't be mocked :(": (selector: unknown) => [selector],
   'Tried to pop a snapshot but there are no snapshots': () => [],
+  "setStore must be run in a Testbed environment or an injection context where the token 'Store' was provided":
+    () => [],
 } as const;
 
 export const buildNgxsTestingMessage = <

@@ -19,7 +19,19 @@ export const setStore = (() => {
 
   let snapshots = [] as unknown[];
 
-  const injectStore = () => TestBed.inject(Store, undefined) ?? inject(Store);
+  const injectStore = () => {
+    try {
+      return inject(Store);
+    } catch {
+      try {
+        return TestBed.inject(Store);
+      } catch {
+        return throwNgxsTestingError(
+          "setStore must be run in a Testbed environment or an injection context where the token 'Store' was provided"
+        );
+      }
+    }
+  };
 
   const fn = <T>(state: T) => {
     const store = injectStore();

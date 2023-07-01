@@ -1,3 +1,8 @@
+import {
+  EnvironmentInjector,
+  Injector,
+  runInInjectionContext,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngxs/store';
 import { buildNgxsTestingMessage } from './ngxs-testing-errors';
@@ -71,5 +76,30 @@ describe('mockState', () => {
     );
 
     expect(setStore.snapshotIndex()).toEqual(-1);
+  });
+
+  it('should work in an injection context', () => {
+    TestBed.resetTestEnvironment();
+
+    expect(() => setStore(42)).toThrowError(
+      new Error(
+        buildNgxsTestingMessage(
+          "setStore must be run in a Testbed environment or an injection context where the token 'Store' was provided"
+        )
+      )
+    );
+
+    const injector = runInInjectionContext(
+      Injector.create({
+        providers: [
+          {
+            provide: Store,
+            useValue: { reset: jest.fn(), snapshot: jest.fn() },
+          },
+          { provide: EnvironmentInjector, useFactory: () => injector },
+        ],
+      }),
+      () => expect(() => setStore(42)).not.toThrow()
+    );
   });
 });
