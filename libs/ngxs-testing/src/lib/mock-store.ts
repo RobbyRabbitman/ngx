@@ -9,8 +9,8 @@ import {
 import { SelectorFunc, TypedSelector } from '@ngxs/store/src/selectors';
 import { concat } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
-import { throwNgxsTestingError } from './error';
 import { MockSelector } from './mock-selector';
+import { throwNgxsTestingError } from './ngxs-testing-errors';
 import { ORIGINAL_STORE } from './original-store';
 
 /**
@@ -37,7 +37,7 @@ export class MockSelectors {
       meta.originalFn?.toString() ??
       (selector instanceof StateToken ? selector : undefined);
     if (key == null)
-      throwNgxsTestingError('not able to mock selector', selector);
+      throwNgxsTestingError("The selector {{}} can't be mocked :(", selector);
     if (!this._selectors.has(key)) this._selectors.set(key, new MockSelector());
     return this._selectors.get(key) as MockSelector<T>;
   }

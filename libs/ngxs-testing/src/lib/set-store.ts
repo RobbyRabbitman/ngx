@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngxs/store';
-import { throwNgxsTestingError } from './error';
+import { throwNgxsTestingError } from './ngxs-testing-errors';
 
 /**
  * Sets the value of the {@link Store} to the specified state by calling {@link Store.reset}.
@@ -45,7 +45,7 @@ export const setStore = (() => {
   fn.pop = () =>
     index < 0
       ? throwNgxsTestingError(
-          'tried to pop a snapshot but there are no snapshots'
+          'Tried to pop a snapshot but there are no snapshots'
         )
       : injectStore().reset(snapshots[--index]);
 

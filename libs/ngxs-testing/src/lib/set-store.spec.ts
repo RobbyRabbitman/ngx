@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Store } from '@ngxs/store';
-import { buildNgxsTestingMessage } from './error';
+import { buildNgxsTestingMessage } from './ngxs-testing-errors';
 import { provideNgxsTesting } from './providers';
 import { setStore } from './set-store';
 
@@ -34,7 +34,7 @@ describe('mockState', () => {
 
     expect(() => setStore.pop()).toThrowError(
       buildNgxsTestingMessage(
-        'tried to pop a snapshot but there are no snapshots'
+        'Tried to pop a snapshot but there are no snapshots'
       )
     );
 
@@ -66,7 +66,7 @@ describe('mockState', () => {
 
     expect(() => setStore.pop()).toThrowError(
       buildNgxsTestingMessage(
-        'tried to pop a snapshot but there are no snapshots'
+        'Tried to pop a snapshot but there are no snapshots'
       )
     );
 
