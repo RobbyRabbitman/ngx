@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
   ActionType,
@@ -7,8 +7,8 @@ import {
   Store,
 } from '@ngxs/store';
 import { SelectorFunc, TypedSelector } from '@ngxs/store/src/selectors';
-import { concat } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { defer, of } from 'rxjs';
+import { startWith, switchMap } from 'rxjs/operators';
 import { MockSelector } from './mock-selector';
 import { throwNgxsTestingError } from './ngxs-testing-errors';
 import { ORIGINAL_STORE } from './original-store';
@@ -33,8 +33,8 @@ export class MockSelectors {
   public get<T>(selector: TypedSelector<T>) {
     const meta = getSelectorMetadata(selector);
     const key =
-      meta.selectorName ??
-      meta.originalFn?.toString() ??
+      meta?.selectorName ??
+      meta?.originalFn?.toString() ??
       (selector instanceof StateToken ? selector : undefined);
     if (key == null)
       throwNgxsTestingError("The selector {{}} can't be mocked :(", selector);
@@ -56,6 +56,8 @@ export class MockStore implements Required<Store> {
    */
   private readonly _mockSelectors = inject(MockSelectors);
 
+  private readonly _injector = inject(Injector);
+
   /**
    * Reference to the original store.
    *
@@ -67,31 +69,38 @@ export class MockStore implements Required<Store> {
     this._store.dispatch(actionOrActions);
 
   public select = <T>(selector: unknown) =>
-    concat(
-      this._store
-        .select(selector as SelectorFunc<T>)
-        .pipe(
-          takeUntil(
-            toObservable(
-              this._mockSelectors.get(selector as TypedSelector<T>).isSet
-            ).pipe(filter(Boolean))
-          )
+    defer(() =>
+      toObservable(
+        this._mockSelectors.get(selector as TypedSelector<T>).isSet,
+        {
+          injector: this._injector,
+        }
+      ).pipe(
+        startWith(
+          this._mockSelectors.get(selector as TypedSelector<T>).isSet()
         ),
-      toObservable(this._mockSelectors.get(selector as TypedSelector<T>).value)
+        switchMap((set) =>
+          set
+            ? toObservable(
+                this._mockSelectors.get(selector as TypedSelector<T>).value,
+                {
+                  injector: this._injector,
+                }
+              ).pipe(
+                startWith(
+                  this._mockSelectors.get(selector as TypedSelector<T>).value()
+                )
+              )
+            : this._store.select(selector as SelectorFunc<T>)
+        )
+      )
     );
 
   public selectOnce = <T>(selector: unknown) =>
-    concat(
-      this._store
-        .selectOnce(selector as SelectorFunc<T>)
-        .pipe(
-          takeUntil(
-            toObservable(
-              this._mockSelectors.get(selector as TypedSelector<T>).isSet
-            ).pipe(filter(Boolean))
-          )
-        ),
-      toObservable(this._mockSelectors.get(selector as TypedSelector<T>).value)
+    defer(() =>
+      this._mockSelectors.get(selector as TypedSelector<T>).isSet()
+        ? of(this._mockSelectors.get(selector as TypedSelector<T>).value())
+        : this._store.selectOnce(selector as SelectorFunc<T>)
     );
 
   public selectSnapshot = <T>(selector: unknown) =>

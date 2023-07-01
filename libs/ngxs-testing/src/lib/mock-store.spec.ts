@@ -1,174 +1,237 @@
-import { Injectable } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { State, StateToken, Store, createSelector } from '@ngxs/store';
-import { provideNgxsTesting } from './providers';
-import { mockSelector } from './testing-controller';
+import { StateToken, Store, TypedSelector } from '@ngxs/store';
+import { BehaviorSubject, first, firstValueFrom } from 'rxjs';
+import { MockSelectors, MockStore } from './mock-store';
+import { ORIGINAL_STORE } from './original-store';
 
-describe('mockSelector with an MockStore provided', () => {
-  describe("when mocking 'createSelector' selectors", () => {
-    describe('without state', () => {
-      const fooSelector = () => createSelector(undefined, () => 42);
+describe('MockSelectors', () => {
+  let selectors: MockSelectors;
 
-      const fooX2Selector = () =>
-        createSelector([fooSelector()], (foo) => foo * 2);
+  beforeEach(() => (selectors = new MockSelectors()));
 
-      beforeEach(() =>
-        TestBed.configureTestingModule({
-          providers: provideNgxsTesting(),
-        }).compileComponents()
-      );
+  it('should be idempotent', () => {
+    const a = new StateToken<unknown>('a');
 
-      it('should be mockable', () => {
-        expect(() => mockSelector(fooSelector())).not.toThrow();
+    const b = new StateToken<unknown>('b');
 
-        const a = mockSelector(fooSelector());
+    expect(selectors.get(a)).toBe(selectors.get(a));
 
-        const b = mockSelector(fooSelector());
+    expect(selectors.get(b)).toBe(selectors.get(b));
 
-        expect(a).toBe(b);
+    expect(selectors.get(a)).not.toBe(selectors.get(b));
+  });
 
-        const c = mockSelector(fooSelector());
+  it("should throw an error when a selector can't be mocked", () => {
+    const a = 42;
 
-        const d = mockSelector(fooX2Selector());
+    expect(() =>
+      selectors.get(a as unknown as TypedSelector<unknown>)
+    ).toThrowError("NGXS Testing: The selector 42 can't be mocked :(");
+  });
+});
 
-        expect(c).not.toBe(d);
-      });
+describe('MockStore', () => {
+  let mockStore: MockStore;
+  let mockSelectors: MockSelectors;
+  let proxiedStore: Store;
+  let proxiedStoreState$: BehaviorSubject<{ origin: 'proxy'; value: number }>;
 
-      it('should return the original selectors value as long as the mockselectors value was not set', () => {
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(42);
+  beforeEach(() => {
+    proxiedStoreState$ = new BehaviorSubject({ origin: 'proxy', value: 42 });
 
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          84
-        );
+    return TestBed.configureTestingModule({
+      providers: [
+        MockSelectors,
+        MockStore,
+        {
+          provide: ORIGINAL_STORE,
+          useValue: {
+            reset: jest.fn(),
+            dispatch: jest.fn(),
+            snapshot: jest.fn(),
+            subscribe: jest.fn(),
+            select: jest.fn().mockImplementation(() => proxiedStoreState$),
+            selectOnce: jest
+              .fn()
+              .mockImplementation(() => proxiedStoreState$.pipe(first())),
+            selectSnapshot: jest
+              .fn()
+              .mockImplementation(() => proxiedStoreState$.value),
+          },
+        },
+      ],
+    }).compileComponents();
+  });
 
-        mockSelector(fooSelector()).set(9);
+  beforeEach(() => {
+    mockStore = TestBed.inject(MockStore);
 
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(9);
+    mockSelectors = TestBed.inject(MockSelectors);
 
-        expect(
-          TestBed.inject(Store).selectSnapshot(fooX2Selector())
-        ).not.toEqual(18);
+    proxiedStore = TestBed.inject(ORIGINAL_STORE);
+  });
 
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          84
-        );
-      });
+  it('should forward select and switch to the mock selectors value when it was set', async () => {
+    const selector = new StateToken<unknown>('');
+
+    const value$ = mockStore.select(selector);
+
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: 42,
     });
 
-    describe('with state', () => {
-      @State({ name: 'someState', defaults: { foo: 42 } })
-      @Injectable()
-      class SomeState {}
+    proxiedStoreState$.next({
+      origin: 'proxy',
+      value: -1,
+    });
 
-      const fooSelector = () =>
-        createSelector([SomeState], (state) => state.foo);
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
 
-      const fooX2Selector = () =>
-        createSelector([fooSelector()], (foo) => foo * 2);
+    const mockSelector = mockSelectors.get(selector);
 
-      beforeEach(() =>
-        TestBed.configureTestingModule({
-          providers: provideNgxsTesting([SomeState]),
-        }).compileComponents()
-      );
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
 
-      it('should be mockable', () => {
-        expect(() => mockSelector(fooSelector())).not.toThrow();
+    mockSelector.set({
+      origin: 'mock',
+      value: 42,
+    });
 
-        const a = mockSelector(fooSelector());
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'mock',
+      value: 42,
+    });
 
-        const b = mockSelector(fooSelector());
+    mockSelector.set({
+      origin: 'mock',
+      value: -1,
+    });
 
-        expect(a).toBe(b);
-
-        const c = mockSelector(fooSelector());
-
-        const d = mockSelector(fooX2Selector());
-
-        expect(c).not.toBe(d);
-      });
-
-      it('should return the original selectors value as long as the mockselectors value was not set', () => {
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(42);
-
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          84
-        );
-
-        TestBed.inject(Store).reset({ someState: { foo: 15 } });
-
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(15);
-
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          30
-        );
-
-        mockSelector(fooSelector()).set(9);
-
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(9);
-
-        expect(
-          TestBed.inject(Store).selectSnapshot(fooX2Selector())
-        ).not.toEqual(18);
-
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          30
-        );
-
-        TestBed.inject(Store).reset({ someState: { foo: 40 } });
-
-        expect(TestBed.inject(Store).selectSnapshot(fooSelector())).toEqual(9);
-
-        expect(TestBed.inject(Store).selectSnapshot(fooX2Selector())).toEqual(
-          80
-        );
-      });
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'mock',
+      value: -1,
     });
   });
 
-  describe("when mocking 'StateToken' selectors", () => {
-    describe('without state', () => {
-      let someStateToken: StateToken<unknown>;
+  it('should forward selectOnce when the mock selectors value was not set else return the value of the mock selector', async () => {
+    const selector = new StateToken<unknown>('');
 
-      let someOtherStateToken: StateToken<unknown>;
+    const value$ = mockStore.selectOnce(selector);
 
-      beforeEach(() => {
-        someStateToken = new StateToken<unknown>('someState');
-
-        someOtherStateToken = new StateToken<unknown>('someOtherState');
-
-        return TestBed.configureTestingModule({
-          providers: provideNgxsTesting(),
-        }).compileComponents();
-      });
-
-      it('should be mockable', () => {
-        expect(() => mockSelector(someStateToken)).not.toThrow();
-
-        const a = mockSelector(someStateToken);
-
-        const b = mockSelector(someStateToken);
-
-        expect(a).toBe(b);
-
-        const c = mockSelector(someStateToken);
-
-        const d = mockSelector(someOtherStateToken);
-
-        expect(c).not.toBe(d);
-      });
-
-      it('should return the original selectors value as long as the mockselectors value was not set', () => {
-        expect(
-          TestBed.inject(Store).selectSnapshot(someStateToken)
-        ).toBeUndefined();
-
-        mockSelector(someStateToken).set('someMockValue');
-
-        expect(TestBed.inject(Store).selectSnapshot(someStateToken)).toEqual(
-          'someMockValue'
-        );
-      });
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: 42,
     });
+
+    proxiedStoreState$.next({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    const mockSelector = mockSelectors.get(selector);
+
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    mockSelector.set({
+      origin: 'mock',
+      value: 42,
+    });
+
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'mock',
+      value: 42,
+    });
+
+    mockSelector.set({
+      origin: 'mock',
+      value: -1,
+    });
+
+    expect(await firstValueFrom(value$)).toEqual({
+      origin: 'mock',
+      value: -1,
+    });
+  });
+
+  it('should forward selectSnapshot when the mock selectors value was not set else return the value of the mock selector', async () => {
+    const selector = new StateToken<unknown>('');
+
+    expect(mockStore.selectSnapshot(selector)).toEqual({
+      origin: 'proxy',
+      value: 42,
+    });
+
+    proxiedStoreState$.next({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    expect(mockStore.selectSnapshot(selector)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    const mockSelector = mockSelectors.get(selector);
+
+    expect(mockStore.selectSnapshot(selector)).toEqual({
+      origin: 'proxy',
+      value: -1,
+    });
+
+    mockSelector.set({
+      origin: 'mock',
+      value: 42,
+    });
+
+    expect(mockStore.selectSnapshot(selector)).toEqual({
+      origin: 'mock',
+      value: 42,
+    });
+
+    mockSelector.set({
+      origin: 'mock',
+      value: -1,
+    });
+
+    expect(mockStore.selectSnapshot(selector)).toEqual({
+      origin: 'mock',
+      value: -1,
+    });
+  });
+
+  it('should forward reset', () => {
+    const state = 42;
+    mockStore.reset(state);
+    expect(proxiedStore.reset).toHaveBeenCalledWith(state);
+  });
+
+  it('should forward snapshot', () => {
+    mockStore.snapshot();
+    expect(proxiedStore.snapshot).toHaveBeenCalled();
+  });
+
+  it('should forward dispatch', () => {
+    mockStore.dispatch({ type: 'foo' });
+    expect(proxiedStore.dispatch).toHaveBeenCalledWith({ type: 'foo' });
+  });
+
+  it('should forward subscribe', () => {
+    const fn = () => undefined;
+    mockStore.subscribe(fn);
+    expect(proxiedStore.subscribe).toHaveBeenCalledWith(fn);
   });
 });
