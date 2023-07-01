@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import {
   ActionType,
   getSelectorMetadata,
@@ -7,7 +8,7 @@ import {
 } from '@ngxs/store';
 import { SelectorFunc, TypedSelector } from '@ngxs/store/src/selectors';
 import { concat } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 import { throwNgxsTestingError } from './error';
 import { MockSelector } from './mock-selector';
 import { ORIGINAL_STORE } from './original-store';
@@ -71,10 +72,12 @@ export class MockStore implements Required<Store> {
         .select(selector as SelectorFunc<T>)
         .pipe(
           takeUntil(
-            this._mockSelectors.get(selector as TypedSelector<T>).value$
+            toObservable(
+              this._mockSelectors.get(selector as TypedSelector<T>).isSet
+            ).pipe(filter(Boolean))
           )
         ),
-      this._mockSelectors.get(selector as TypedSelector<T>).value$
+      toObservable(this._mockSelectors.get(selector as TypedSelector<T>).value)
     );
 
   public selectOnce = <T>(selector: unknown) =>
@@ -83,15 +86,17 @@ export class MockStore implements Required<Store> {
         .selectOnce(selector as SelectorFunc<T>)
         .pipe(
           takeUntil(
-            this._mockSelectors.get(selector as TypedSelector<T>).value$
+            toObservable(
+              this._mockSelectors.get(selector as TypedSelector<T>).isSet
+            ).pipe(filter(Boolean))
           )
         ),
-      this._mockSelectors.get(selector as TypedSelector<T>).value$
+      toObservable(this._mockSelectors.get(selector as TypedSelector<T>).value)
     );
 
   public selectSnapshot = <T>(selector: unknown) =>
-    this._mockSelectors.get(selector as TypedSelector<T>).isSet
-      ? this._mockSelectors.get(selector as TypedSelector<T>).value
+    this._mockSelectors.get(selector as TypedSelector<T>).isSet()
+      ? this._mockSelectors.get(selector as TypedSelector<T>).value()
       : this._store.selectSnapshot(selector as SelectorFunc<T>);
 
   public subscribe = (fn?: (value: unknown) => void) =>

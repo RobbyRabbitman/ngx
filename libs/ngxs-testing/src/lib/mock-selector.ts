@@ -1,28 +1,30 @@
-import { BehaviorSubject, map } from 'rxjs';
+import { signal } from '@angular/core';
 
 /**
  * Represents a selector, which returns a value which was previously set.
  */
 export class MockSelector<T> {
-  private readonly _initialValue = Symbol();
-
-  private readonly _value$ = new BehaviorSubject<T>(this._initialValue as T);
+  /**
+   * @ignore
+   */
+  private readonly _isSet = signal(false);
 
   /**
-   * The value of this selector. Emits undefined, when a value has not been set yet.
+   * @ignore
+   */
+  private readonly _value = signal<T | undefined>(undefined);
+
+  /**
+   * The value of this selector. Undefined, when a value has not been set yet.
    *
    * @see {@link MockSelector.set}
    */
-  public readonly value$ = this._value$
-    .asObservable()
-    .pipe(map((value) => (this.isSet ? value : undefined)));
+  public readonly value = this._value.asReadonly();
 
   /**
    * Whether a value was set.
    */
-  public readonly isSet$ = this._value$
-    .asObservable()
-    .pipe(map((value) => value !== this._initialValue));
+  public readonly isSet = this._isSet.asReadonly();
 
   /**
    * Sets this value.
@@ -30,25 +32,9 @@ export class MockSelector<T> {
    * @param value
    *
    * @see {@link MockSelector.value}
-   * @see {@link MockSelector.value$}
    */
   public set(value: T) {
-    this._value$.next(value);
-  }
-
-  /**
-   * The value of this selector. Returns undefined, when a value has not been set yet.
-   *
-   * @see {@link MockSelector.set}
-   */
-  public get value() {
-    return this.isSet ? this._value$.value : undefined;
-  }
-
-  /**
-   * Whether a value was set.
-   */
-  public get isSet() {
-    return this._value$.value !== this._initialValue;
+    this._value.set(value);
+    this._isSet.set(true);
   }
 }
