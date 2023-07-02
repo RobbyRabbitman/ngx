@@ -1,14 +1,14 @@
 import { signal } from '@angular/core';
+import { ifNonNull } from './if-non-null';
 import { pipe } from './pipe';
-import { whenNonNull } from './when-non-null';
 
-describe('whenNonNull', () => {
+describe('ifNonNull', () => {
   it('should execute the callback whenever a non nullish value was emitted', () => {
     const source = signal<number | undefined | null>(undefined);
 
     const double = jest.fn().mockImplementation((x) => x * 2);
 
-    const value = whenNonNull(double)(source);
+    const value = ifNonNull(double)(source);
 
     expect(double).toHaveBeenCalledTimes(0);
 
@@ -45,7 +45,7 @@ describe('whenNonNull', () => {
 
     const double = jest.fn().mockImplementation((x) => x * 2);
 
-    const value = pipe(source, whenNonNull(double));
+    const value = pipe(source, ifNonNull(double));
 
     expect(double).toHaveBeenCalledTimes(0);
 

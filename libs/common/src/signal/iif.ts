@@ -1,18 +1,21 @@
-import { Signal, computed } from '@angular/core';
-import { EMPTY } from './empty';
+import { computed } from '@angular/core';
 import { OperatorFunction, SignalOrRegularFn } from './types';
 
 /**
  *
  * @param source
- * @param truthyBranch
- * @param falsyBranch
+ * @param thenBranch
+ * @param elseBranch
  * @returns the truthy branch if the source is truthy, else the falsy branch or undefined if not provided.
  */
-export const iif =
-  <T, F>(
-    truthyBranch: SignalOrRegularFn<T>,
-    falsyBranch?: SignalOrRegularFn<F>
-  ): OperatorFunction<boolean, T | F | undefined> =>
-  (source: Signal<boolean>) =>
-    computed(() => (source() ? truthyBranch() : falsyBranch?.() ?? EMPTY()));
+export function iif<C, T, F>(
+  thenBranch: SignalOrRegularFn<T>,
+  elseBranch: SignalOrRegularFn<F>
+): OperatorFunction<C, T | F>;
+export function iif<C, T, F>(
+  thenBranch: SignalOrRegularFn<T>,
+  elseBranch?: SignalOrRegularFn<F>
+): OperatorFunction<C, T | F | undefined> {
+  return (source: SignalOrRegularFn<C>) =>
+    computed(() => (source() ? thenBranch() : elseBranch?.()));
+}

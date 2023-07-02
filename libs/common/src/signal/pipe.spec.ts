@@ -5,7 +5,7 @@ import { pipe } from './pipe';
 
 describe('pipe', () => {
   it('should chain operators', () => {
-    const source = signal(20);
+    const source = signal(42);
 
     const value = pipe(
       source,
