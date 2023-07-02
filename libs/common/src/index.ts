@@ -1,2 +1,2 @@
 export * from './icon';
-//foo
+export * from './signal';
