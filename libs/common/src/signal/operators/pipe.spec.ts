@@ -13,17 +13,18 @@ describe('pipe', () => {
       iif(
         () => 'positive',
         () => 'non-positive'
-      )
+      ),
+      map((x) => x.toUpperCase())
     );
 
-    expect(value()).toBe('positive');
+    expect(value()).toBe('POSITIVE');
 
     source.set(1);
 
-    expect(value()).toBe('positive');
+    expect(value()).toBe('POSITIVE');
 
     source.set(0);
 
-    expect(value()).toBe('non-positive');
+    expect(value()).toBe('NON-POSITIVE');
   });
 });
