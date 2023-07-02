@@ -1,5 +1,5 @@
 import { computed } from '@angular/core';
-import { OperatorFunction, SignalOrRegularFn } from './types';
+import { OperatorFunction, SignalOrRegularFn } from '../types';
 
 export function iif<C, T>(
   thenBranch: SignalOrRegularFn<T>

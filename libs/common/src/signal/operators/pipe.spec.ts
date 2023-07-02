@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
-import { iif } from './iif';
-import { map } from './map';
+import { iif } from './conditional/iif';
 import { pipe } from './pipe';
+import { map } from './transforming/map';
 
 describe('pipe', () => {
   it('should chain operators', () => {

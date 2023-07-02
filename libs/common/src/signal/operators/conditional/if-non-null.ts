@@ -1,6 +1,5 @@
 import { computed } from '@angular/core';
-import { isNonNull } from '../util/is-non-null';
-import { iif } from './iif';
+import { isNonNull } from '../../../util/is-non-null';
 import {
   InferSignalTuple,
   InferSignalValueTupleAsNonNullable,
@@ -8,7 +7,8 @@ import {
   SignalOrRegularFn,
   SignalTuple,
   UnaryFunction,
-} from './types';
+} from '../types';
+import { iif } from './iif';
 /**
  *
  * @param thenBranch

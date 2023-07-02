@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
+import { pipe } from '../pipe';
 import { ifNonNull } from './if-non-null';
-import { pipe } from './pipe';
 
 describe('ifNonNull', () => {
   it('should execute the callback whenever a non nullish value was emitted', () => {

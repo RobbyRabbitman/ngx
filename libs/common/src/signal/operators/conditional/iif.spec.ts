@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
+import { pipe } from '../pipe';
 import { iif } from './iif';
-import { pipe } from './pipe';
 
 describe('iif', () => {
   it('should switch branches', () => {

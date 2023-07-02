@@ -1,7 +1,7 @@
 import { computed } from '@angular/core';
-import { OperatorFunction } from './types';
+import { OperatorFunction } from '../types';
 
 export const map =
-  <I, O>(projector: (value: I) => O): OperatorFunction<I, O> =>
+  <T, R>(projector: (value: T) => R): OperatorFunction<T, R> =>
   (source) =>
     computed(() => projector(source()));
