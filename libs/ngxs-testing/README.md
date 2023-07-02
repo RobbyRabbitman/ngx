@@ -1,7 +1,7 @@
 # ngxs-testing
 
-This library was generated with [Nx](https://nx.dev).
+A collection of utilities when writing tests for ngxs.
 
-## Running unit tests
+## Features
 
-Run `nx test ngxs-testing` to execute the unit tests.
+- mock selectors
