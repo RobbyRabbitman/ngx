@@ -1,94 +1,100 @@
 import { Signal } from '@angular/core';
+import { OperatorFunction } from './types';
 
-export type UnaryFunction<T, R> = (source: T) => R;
-
-export type PipeFunction<T, R> = UnaryFunction<Signal<T>, Signal<R>>;
-
+// copy pasta from rxjs
+// TODO infer this sh!t with generics...
+// Current limitation: pipe is only infered up to 9 operators...
 export function pipe<T, A>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>
+  op1: OperatorFunction<T, A>
 ): Signal<A>;
 export function pipe<T, A, B>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>
 ): Signal<B>;
 export function pipe<T, A, B, C>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>
 ): Signal<C>;
 export function pipe<T, A, B, C, D>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>
 ): Signal<D>;
 export function pipe<T, A, B, C, D, E>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>
 ): Signal<E>;
 export function pipe<T, A, B, C, D, E, F>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>,
-  fn6: PipeFunction<E, F>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>,
+  op6: OperatorFunction<E, F>
 ): Signal<F>;
 export function pipe<T, A, B, C, D, E, F, G>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>,
-  fn6: PipeFunction<E, F>,
-  fn7: PipeFunction<F, G>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>,
+  op6: OperatorFunction<E, F>,
+  op7: OperatorFunction<F, G>
 ): Signal<G>;
 export function pipe<T, A, B, C, D, E, F, G, H>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>,
-  fn6: PipeFunction<E, F>,
-  fn7: PipeFunction<F, G>,
-  fn8: PipeFunction<G, H>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>,
+  op6: OperatorFunction<E, F>,
+  op7: OperatorFunction<F, G>,
+  op8: OperatorFunction<G, H>
 ): Signal<H>;
 export function pipe<T, A, B, C, D, E, F, G, H, I>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>,
-  fn6: PipeFunction<E, F>,
-  fn7: PipeFunction<F, G>,
-  fn8: PipeFunction<G, H>,
-  fn9: PipeFunction<H, I>
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>,
+  op6: OperatorFunction<E, F>,
+  op7: OperatorFunction<F, G>,
+  op8: OperatorFunction<G, H>,
+  op9: OperatorFunction<H, I>
 ): Signal<I>;
 export function pipe<T, A, B, C, D, E, F, G, H, I>(
   source: Signal<T>,
-  fn1: PipeFunction<T, A>,
-  fn2: PipeFunction<A, B>,
-  fn3: PipeFunction<B, C>,
-  fn4: PipeFunction<C, D>,
-  fn5: PipeFunction<D, E>,
-  fn6: PipeFunction<E, F>,
-  fn7: PipeFunction<F, G>,
-  fn8: PipeFunction<G, H>,
-  fn9: PipeFunction<H, I>,
-  ...fns: PipeFunction<any, any>[]
+  op1: OperatorFunction<T, A>,
+  op2: OperatorFunction<A, B>,
+  op3: OperatorFunction<B, C>,
+  op4: OperatorFunction<C, D>,
+  op5: OperatorFunction<D, E>,
+  op6: OperatorFunction<E, F>,
+  op7: OperatorFunction<F, G>,
+  op8: OperatorFunction<G, H>,
+  op9: OperatorFunction<H, I>,
+  ...operators: OperatorFunction<any, any>[]
 ): Signal<any>;
-export function pipe<T>(signal: Signal<T>, ...fns: PipeFunction<any, any>[]) {
-  return fns.reduce((prev: any, fn) => fn(prev), signal);
+export function pipe<T>(
+  source: Signal<T>,
+  ...operators: OperatorFunction<any, any>[]
+) {
+  return operators.reduce(
+    (signal: Signal<unknown>, current) => current(signal),
+    source
+  );
 }

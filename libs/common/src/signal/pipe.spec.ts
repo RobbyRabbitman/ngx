@@ -1,21 +1,29 @@
 import { signal } from '@angular/core';
+import { iif } from './iif';
 import { map } from './map';
 import { pipe } from './pipe';
 
 describe('pipe', () => {
-  it('', () => {
-    const source = signal(2);
+  it('should chain operators', () => {
+    const source = signal(20);
 
-    const doubledAndNegated = pipe(
+    const value = pipe(
       source,
-      map((x) => x * 2),
-      map((x) => x * -1)
+      map((x) => x > 0),
+      iif(
+        () => 'positive',
+        () => 'non-positive'
+      )
     );
 
-    expect(doubledAndNegated()).toBe(-4);
+    expect(value()).toBe('positive');
 
-    source.set(10);
+    source.set(1);
 
-    expect(doubledAndNegated()).toBe(-20);
+    expect(value()).toBe('positive');
+
+    source.set(0);
+
+    expect(value()).toBe('non-positive');
   });
 });
