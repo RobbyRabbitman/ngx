@@ -9,12 +9,21 @@ import { iif } from './iif';
  * @param fn
  * @returns a signal based on the speficified callback if source is non nullish else undefined.
  */
-export const filterNonNull = <I, O>(
-  source: Signal<I | null | undefined>,
-  fn: (value: NonNullable<I>) => O
+export const filterNonNull = <
+  I extends readonly Signal<any | null | undefined>[],
+  O
+>(
+  fn: (
+    ...values: [
+      ...{
+        [K in keyof I]: I[K] extends Signal<infer X> ? NonNullable<X> : never;
+      }
+    ]
+  ) => O,
+  ...sources: I
 ) =>
   iif(
-    computed(() => isNonNull(source())),
-    computed(() => fn(source() as NonNullable<I>)),
+    computed(() => sources.every((x) => isNonNull(x()))),
+    computed(() => fn(...(sources.map((x) => x()) as any))),
     EMPTY
   );

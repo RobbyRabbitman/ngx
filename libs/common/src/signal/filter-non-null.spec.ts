@@ -5,9 +5,11 @@ describe('filterNonNull', () => {
   it('should execute the callback whenever a non nullish value was emitted', () => {
     const source = signal<number | undefined | null>(undefined);
 
+    const source2 = signal(true);
+
     const double = jest.fn().mockImplementation((x) => x * 2);
 
-    const value = filterNonNull(source, double);
+    const value = filterNonNull(double, source, source2);
 
     expect(double).toHaveBeenCalledTimes(0);
 
