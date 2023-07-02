@@ -1,8 +1,23 @@
 import { TestBed } from '@angular/core/testing';
-import { StateToken, Store, TypedSelector } from '@ngxs/store';
+import {
+  Selector,
+  StateToken,
+  Store,
+  TypedSelector,
+  createSelector,
+} from '@ngxs/store';
 import { BehaviorSubject, first, firstValueFrom } from 'rxjs';
 import { MockSelectors, MockStore } from './mock-store';
 import { ORIGINAL_STORE } from './original-store';
+
+jest.mock('@ngxs/store', () => ({
+  ...jest.requireActual('@ngxs/store'),
+  getSelectorMetadata: jest
+    .fn()
+    .mockImplementation((selector) =>
+      jest.requireActual('@ngxs/store').getSelectorMetadata(selector)
+    ),
+}));
 
 describe('MockSelectors', () => {
   let selectors: MockSelectors;
@@ -19,6 +34,60 @@ describe('MockSelectors', () => {
     expect(selectors.get(b)).toBe(selectors.get(b));
 
     expect(selectors.get(a)).not.toBe(selectors.get(b));
+  });
+
+  it('should be idempotent', () => {
+    // TODO monky patch create selector and create key not only on projector, but also on selectors.
+    // const a = () => createSelector([new StateToken<unknown>('x')], () => 42);
+
+    // const b = () => createSelector([new StateToken<unknown>('y')], () => 42);
+
+    // expect(selectors.get(a())).not.toBe(selectors.get(b()));
+
+    const c = () =>
+      createSelector([new StateToken<unknown>('x')], () => 42, {
+        selectorName: 'c',
+      });
+
+    const d = () =>
+      createSelector([new StateToken<unknown>('y')], () => 42, {
+        selectorName: 'd',
+      });
+
+    expect(selectors.get(c())).not.toBe(selectors.get(d()));
+  });
+
+  describe('should work with', () => {
+    it('StateToken', () =>
+      expect(() =>
+        selectors.get(new StateToken<unknown>('foo'))
+      ).not.toThrow());
+
+    it('createSelector', () =>
+      expect(() =>
+        selectors.get(
+          (() => createSelector([new StateToken<unknown>('foo')], () => 42))()
+        )
+      ).not.toThrow());
+
+    it('@Selector', () => {
+      class State {
+        @Selector()
+        static foo() {
+          return 42;
+        }
+      }
+
+      expect(() => selectors.get(State.foo)).not.toThrow();
+    });
+  });
+
+  it("should throw an error when a selector can't be mocked", () => {
+    const a = 42;
+
+    expect(() =>
+      selectors.get(a as unknown as TypedSelector<unknown>)
+    ).toThrowError("NGXS Testing: The selector 42 can't be mocked :(");
   });
 
   it("should throw an error when a selector can't be mocked", () => {

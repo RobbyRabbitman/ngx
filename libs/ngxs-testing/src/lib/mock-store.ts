@@ -13,6 +13,17 @@ import { MockSelector } from './mock-selector';
 import { throwNgxsTestingError } from './ngxs-testing-errors';
 import { ORIGINAL_STORE } from './original-store';
 
+export const identifySelector = (selector: unknown) => {
+  const meta = getSelectorMetadata(selector);
+  const key =
+    (selector instanceof StateToken ? selector.getName() : undefined) ??
+    meta?.selectorName ??
+    meta?.originalFn?.toString();
+  return key != null
+    ? key
+    : throwNgxsTestingError("The selector {{}} can't be mocked :(", selector);
+};
+
 /**
  * Represents mocked selectors, which can be retrieved after they have been created.
  */
@@ -23,7 +34,7 @@ export class MockSelectors {
    *
    * @ignore
    */
-  private readonly _selectors = new Map<unknown, MockSelector<unknown>>();
+  private readonly _selectors = new Map<string, MockSelector<unknown>>();
 
   /**
    *
@@ -31,13 +42,7 @@ export class MockSelectors {
    * @returns the mocked selector of the orignal selector. Returns the same instance for the same selector: get(a) = a' = b' = get(b) => a' = b' and a = b
    */
   public get<T>(selector: TypedSelector<T>) {
-    const meta = getSelectorMetadata(selector);
-    const key =
-      meta?.selectorName ??
-      meta?.originalFn?.toString() ??
-      (selector instanceof StateToken ? selector : undefined);
-    if (key == null)
-      throwNgxsTestingError("The selector {{}} can't be mocked :(", selector);
+    const key = identifySelector(selector);
     if (!this._selectors.has(key)) this._selectors.set(key, new MockSelector());
     return this._selectors.get(key) as MockSelector<T>;
   }

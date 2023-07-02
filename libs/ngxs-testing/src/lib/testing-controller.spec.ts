@@ -7,7 +7,7 @@ import { mockSelector } from './testing-controller';
 describe('mockSelector with an MockStore provided', () => {
   describe("when mocking 'createSelector' selectors", () => {
     describe('without state', () => {
-      const fooSelector = () => createSelector(undefined, () => 42);
+      const fooSelector = () => createSelector([], () => 42);
 
       const fooX2Selector = () =>
         createSelector([fooSelector()], (foo) => foo * 2);
