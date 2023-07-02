@@ -1,4 +1,4 @@
-import { Signal, computed } from '@angular/core';
+import { Signal } from '@angular/core';
 
 export type UnaryFunction<T, R> = (value: T) => R;
 
@@ -7,10 +7,11 @@ export type OperatorFunction<T, R> = UnaryFunction<
   Signal<R>
 >;
 
-export const createOperatorFunction =
-  <T, R>(op: UnaryFunction<SignalOrRegularFn<T>, R>) =>
-  (source: SignalOrRegularFn<T>) =>
-    computed(() => op(source));
+// Drawback: op gets executed once -> need 'defer'
+// export const createOperatorFunction =
+//   <T, R>(op: UnaryFunction<SignalOrRegularFn<T>, R>) =>
+//   (source: SignalOrRegularFn<T>) =>
+//     computed(() => op(source));
 
 export type SignalOrRegularFn<T> = Signal<T> | (() => T);
 

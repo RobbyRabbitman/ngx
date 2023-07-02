@@ -15,30 +15,26 @@ import {
  */
 export function ifNonNull<T, R>(
   thenBranch: UnaryFunction<NonNullable<T>, R>
-): OperatorFunction<T, R | undefined>;
-/**
- *
- * @param thenBranch
- * @param elseBranch
- */
+): OperatorFunction<T | null | undefined, R | undefined>;
+
 export function ifNonNull<T, R, F>(
   thenBranch: UnaryFunction<NonNullable<T>, R>,
   elseBranch: SignalOrRegularFn<F>
-): OperatorFunction<T, R | F>;
-/**
- *
- * @param thenBranch
- * @param elseBranch
- * @returns
- */
+): OperatorFunction<T | null | undefined, R | F>;
+
 export function ifNonNull<T, R, F>(
   thenBranch: UnaryFunction<NonNullable<T>, R>,
   elseBranch?: SignalOrRegularFn<F>
-): OperatorFunction<T, R | F | undefined> {
+): OperatorFunction<T | null | undefined, R | F | undefined>;
+
+export function ifNonNull<T, R, F>(
+  thenBranch: UnaryFunction<NonNullable<T>, R>,
+  elseBranch?: SignalOrRegularFn<F>
+): OperatorFunction<T | null | undefined, R | F | undefined> {
   return (source) =>
     iif(
       () => thenBranch(source() as NonNullable<T>),
-      elseBranch as SignalOrRegularFn<F>
+      elseBranch
     )(computed(() => isNonNull(source())));
 }
 
