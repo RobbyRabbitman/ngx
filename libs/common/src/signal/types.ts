@@ -1,6 +1,6 @@
 import { Signal, computed } from '@angular/core';
 
-export type UnaryFunction<T, R> = (source: T) => R;
+export type UnaryFunction<T, R> = (value: T) => R;
 
 export type OperatorFunction<T, R> = UnaryFunction<
   SignalOrRegularFn<T>,
@@ -14,14 +14,23 @@ export const createOperatorFunction =
 
 export type SignalOrRegularFn<T> = Signal<T> | (() => T);
 
-export type SignalTuple<T extends readonly Signal<any>[]> = {
-  [K in keyof T]: T[K] extends Signal<infer V> ? Signal<V> : never;
-};
+export type SignalTuple = readonly Signal<any | null | undefined>[];
 
-export type SignalValueTuple<T extends readonly Signal<any>[]> = {
-  [K in keyof T]: T[K] extends Signal<infer V> ? V : never;
-};
+export type InferSignalTuple<T extends SignalTuple> = readonly [
+  ...{
+    [K in keyof T]: T[K] extends Signal<infer V> ? Signal<V> : never;
+  }
+];
 
-export type NonNullableSignalValueTuple<T extends readonly Signal<any>[]> = {
-  [K in keyof T]: T[K] extends Signal<infer V> ? NonNullable<V> : never;
-};
+export type InferSignalValueTuple<T extends SignalTuple> = readonly [
+  ...{
+    [K in keyof T]: T[K] extends Signal<infer V> ? V : never;
+  }
+];
+
+export type InferSignalValueTupleAsNonNullable<T extends SignalTuple> =
+  readonly [
+    ...{
+      [K in keyof T]: T[K] extends Signal<infer V> ? NonNullable<V> : never;
+    }
+  ];
