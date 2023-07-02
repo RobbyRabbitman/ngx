@@ -15,6 +15,8 @@ export type OperatorFunction<T, R> = UnaryFunction<
 
 export type SignalOrRegularFn<T> = Signal<T> | (() => T);
 
+export type SignalOrValue<T> = Signal<T> | T;
+
 export type SignalTuple = readonly Signal<any | null | undefined>[];
 
 export type InferSignalTuple<T extends SignalTuple> = readonly [

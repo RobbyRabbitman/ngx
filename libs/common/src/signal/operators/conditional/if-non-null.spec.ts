@@ -50,4 +50,22 @@ describe('ifNonNull', () => {
 
     expect(fn).toHaveBeenCalledTimes(1);
   });
+
+  it('should accept a signal', () => {
+    const source = signal<number | undefined>(undefined);
+
+    const otherSource = signal('foo');
+
+    const value = ifNonNull(otherSource)(source);
+
+    expect(value()).toBeUndefined();
+
+    source.set(42);
+
+    expect(value()).toBe('foo');
+
+    otherSource.set('bar');
+
+    expect(value()).toBe('bar');
+  });
 });
