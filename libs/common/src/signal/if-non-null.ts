@@ -9,17 +9,38 @@ import {
   SignalTuple,
   UnaryFunction,
 } from './types';
-
-export const ifNonNull =
-  <T, R, F>(
-    thenBranch: UnaryFunction<NonNullable<T>, R>,
-    elseBranch?: SignalOrRegularFn<F>
-  ): OperatorFunction<T, R | F | undefined> =>
-  (source) =>
+/**
+ *
+ * @param thenBranch
+ */
+export function ifNonNull<T, R>(
+  thenBranch: UnaryFunction<NonNullable<T>, R>
+): OperatorFunction<T, R | undefined>;
+/**
+ *
+ * @param thenBranch
+ * @param elseBranch
+ */
+export function ifNonNull<T, R, F>(
+  thenBranch: UnaryFunction<NonNullable<T>, R>,
+  elseBranch: SignalOrRegularFn<F>
+): OperatorFunction<T, R | F>;
+/**
+ *
+ * @param thenBranch
+ * @param elseBranch
+ * @returns
+ */
+export function ifNonNull<T, R, F>(
+  thenBranch: UnaryFunction<NonNullable<T>, R>,
+  elseBranch?: SignalOrRegularFn<F>
+): OperatorFunction<T, R | F | undefined> {
+  return (source) =>
     iif(
       () => thenBranch(source() as NonNullable<T>),
       elseBranch as SignalOrRegularFn<F>
     )(computed(() => isNonNull(source())));
+}
 
 /**
  *
