@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Signal } from '@angular/core';
 import {
   FormControl,
   FormsModule,
@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
+import { merge, take } from 'rxjs';
 import { MixinControlValueAccessor } from './control-value-accessor.mixin';
 
 describe('A MixinControlValueAccessor instance used as a host directive by a component', () => {
@@ -104,9 +105,6 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
       const mixin = ngMocks.findInstance(MixinControlValueAccessor);
 
-      fixture.detectChanges();
-      await fixture.whenStable();
-      fixture.detectChanges();
       await fixture.whenStable();
 
       expect(mixin.value$()).toBe(42);
@@ -115,10 +113,54 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
       fixture.detectChanges();
       await fixture.whenStable();
-      fixture.detectChanges();
-      await fixture.whenStable();
 
       expect(mixin.value$()).toBe(-1);
+    });
+
+    it('when setting a value via the control (Model -> UI), it should not trigger an UI -> Model update', () => {
+      const fixture = MockRender(
+        `<some-component [formControl]="control"></some-component>`,
+        {
+          control: new FormControl(),
+        }
+      );
+
+      const mixin = ngMocks.findInstance(MixinControlValueAccessor);
+
+      const control = ngMocks.findInstance(NgControl)
+        .control as FormControl<number>;
+
+      const spyOnChange = jest.fn();
+
+      const onChange = (
+        mixin as unknown as { _onChange$: Signal<(value: unknown) => void> }
+      )._onChange$();
+
+      mixin.registerOnChange((value: unknown) => {
+        spyOnChange(value);
+        onChange(value);
+      });
+
+      const values: number[] = [];
+
+      merge(control.valueChanges, mixin.valueChange$)
+        .pipe(take(6))
+        .subscribe({ next: (x) => values.push(x) });
+
+      control.setValue(1);
+      fixture.detectChanges();
+
+      control.setValue(99);
+      fixture.detectChanges();
+
+      mixin.value = 42;
+      fixture.detectChanges();
+
+      expect(values).toEqual([1, 1, 99, 99, 42, 42]);
+
+      expect(spyOnChange).toHaveBeenCalledTimes(1);
+
+      expect(spyOnChange).toHaveBeenCalledWith(42);
     });
 
     it('should update the value of the control', async () => {
@@ -137,10 +179,6 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       await fixture.whenStable();
 
       expect(mixin.value$()).toBe(42);
-
-      fixture.detectChanges();
-      await fixture.whenStable();
-
       expect(ngControl.value).toBe(42);
     });
   });

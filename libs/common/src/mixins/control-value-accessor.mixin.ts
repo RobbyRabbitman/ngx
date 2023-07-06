@@ -7,9 +7,11 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
+import { skip } from 'rxjs';
 import { pairwise } from '../signal';
 import { noop } from '../util';
 
@@ -87,34 +89,43 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public readonly compareTo$ = signal((a: T, b: T) => a === b);
 
   /**
-   * Ensures the control is up to date with the UI of this host.
+   * Ensures the control's value is up to date with the UI of this host.
    *
    * @see {@link MixinControlValueAccessor.value$}
    * @see {@link MixinControlValueAccessor._onChange$}
    *
    * @ignore
    */
-  private readonly _updateControl$$ = effect(
-    // If not put in next change detection cycle: NG100 ng-pristine: true -> false
-    () => requestAnimationFrame(() => this._onChange$()(this.value$()))
+  private readonly _viewToModel$$ = effect(() =>
+    !untracked(this.compareTo$)(this.ngControl?.value, this.value$())
+      ? this._onChange$()(this.value$())
+      : undefined
   );
 
+  /**
+   * Sets this value.
+   */
   @Input()
   public set value(value: T) {
     this._value$.set(value);
   }
 
+  /**
+   * Overrides this default comparator.
+   *
+   * @see {@link MixinControlValueAccessor.compareTo$}
+   */
   @Input()
   public set compareTo(compareTo: (a: T, b: T) => boolean) {
     this.compareTo$.set(compareTo);
   }
 
   /**
-   * An observable representing this {@link MixinControlValueAccessor.value$}.
+   * A hot observable representing changes of {@link MixinControlValueAccessor.value$}.
    */
   // eslint-disable-next-line @angular-eslint/no-output-rename
   @Output('valueChange')
-  public readonly valueChange$ = toObservable(this.value$);
+  public readonly valueChange$ = toObservable(this.value$).pipe(skip(1)); // -> hot observable
 
   public constructor() {
     if (this.ngControl) this.ngControl.valueAccessor = this;
