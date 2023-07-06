@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
-import { merge, take } from 'rxjs';
+import { merge } from 'rxjs';
 import { MixinControlValueAccessor } from './control-value-accessor.mixin';
 
 describe('A MixinControlValueAccessor instance used as a host directive by a component', () => {
@@ -118,17 +118,16 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     });
 
     it('when setting a value via the control (Model -> UI), it should not trigger an UI -> Model update', () => {
+      const control = new FormControl<number>(777);
+
       const fixture = MockRender(
         `<some-component [formControl]="control"></some-component>`,
         {
-          control: new FormControl(),
+          control,
         }
       );
 
       const mixin = ngMocks.findInstance(MixinControlValueAccessor);
-
-      const control = ngMocks.findInstance(NgControl)
-        .control as FormControl<number>;
 
       const spyOnChange = jest.fn();
 
@@ -143,9 +142,16 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
       const values: number[] = [];
 
-      merge(control.valueChanges, mixin.valueChange$)
-        .pipe(take(6))
-        .subscribe({ next: (x) => values.push(x) });
+      expect(mixin.value$()).toBe(777);
+
+      expect(control.value).toBe(777);
+
+      const values$$ = merge(
+        control.valueChanges,
+        mixin.valueChange$
+      ).subscribe({
+        next: (x) => values.push(x),
+      });
 
       control.setValue(1);
       fixture.detectChanges();
@@ -155,6 +161,12 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
       mixin.value = 42;
       fixture.detectChanges();
+
+      // setting the 'same' value should be filtered
+      mixin.value = 42;
+      fixture.detectChanges();
+
+      values$$.unsubscribe();
 
       expect(values).toEqual([1, 1, 99, 99, 42, 42]);
 
