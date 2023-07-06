@@ -12,7 +12,6 @@ import {
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { skip } from 'rxjs';
-import { pairwise } from '../signal';
 import { noop } from '../util';
 
 /**
@@ -69,10 +68,15 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @see {@link MixinControlValueAccessor.ngControl}
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
-  public readonly value$ = computed(() => {
-    const [currentValue, newValue] = pairwise(this._value$())(this._value$)();
-    return !this.compareTo$()(currentValue, newValue) ? newValue : currentValue;
-  });
+  public readonly value$ = computed(
+    (() => {
+      let currentValue = this._value$();
+      return () =>
+        !this.compareTo$()(currentValue, this._value$())
+          ? (currentValue = this._value$())
+          : currentValue;
+    })()
+  );
 
   /**
    * Whether this mixin is disabled. If a control is present, it reflects it's disabled state.
