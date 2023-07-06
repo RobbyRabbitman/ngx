@@ -3,14 +3,13 @@ import {
   HostListener,
   Input,
   Output,
-  Signal,
-  WritableSignal,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
-import { combineLatest, filter, map, pairwise } from 'rxjs';
+import { pairwise } from '../signal';
 import { noop } from '../util';
 
 @Directive({
@@ -30,11 +29,20 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
 
   private readonly _value$ = signal(this._ngControl?.value as T);
 
-  public readonly value$ = signal(this._value$()) as Signal<T>;
+  public readonly value$ = pairwise(
+    (currentValue, newValue) =>
+      this.compareTo$()(currentValue, newValue) ? newValue : currentValue,
+    this._value$()
+  )(this._value$);
 
   public readonly disabled$ = this._disabled$.asReadonly();
 
   public readonly compareTo$ = signal((a: T, b: T) => a !== b);
+
+  public _updateControl$$ = effect(
+    // If not put in next change detection cycle: NG100 ng-pristine: true -> false
+    () => requestAnimationFrame(() => this.onChange$()(this.value$()))
+  );
 
   @Input()
   public set value(value: T) {
@@ -53,20 +61,6 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public constructor() {
     if (this._ngControl) this._ngControl.valueAccessor = this;
   }
-
-  public _value$$ = combineLatest([
-    toObservable(this._value$).pipe(pairwise()),
-    toObservable(this.compareTo$),
-  ])
-    .pipe(
-      filter(([[a, b], compareTo]) => compareTo(a, b)),
-      map(([[_, b]]) => {
-        (this.value$ as WritableSignal<T>).set(b);
-        this.onChange$()(b);
-      }),
-      takeUntilDestroyed()
-    )
-    .subscribe();
 
   @HostListener('blur')
   public blur = () => this.onTouched$()();
