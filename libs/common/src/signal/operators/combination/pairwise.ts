@@ -1,19 +1,12 @@
 import { computed } from '@angular/core';
 import { OperatorFunction } from '../types';
+export function pairwise<T>(): OperatorFunction<T, [T | undefined, T]>;
 
-export function pairwise<T, R>(
-  projector: (previous: T | undefined, current: T) => R
-): OperatorFunction<T, R>;
+export function pairwise<T>(initialPrevious: T): OperatorFunction<T, [T, T]>;
 
-export function pairwise<T, R>(
-  projector: (previous: T, current: T) => R,
-  startWithPrevious: T
-): OperatorFunction<T, R>;
-
-export function pairwise<T, R>(
-  projector: (previous: T | undefined, current: T) => R,
-  startWithPrevious?: T
-): OperatorFunction<T, R> {
-  let previous: T | undefined = startWithPrevious;
-  return (source) => computed(() => projector(previous, (previous = source())));
+export function pairwise<T>(
+  initialPrevious?: T
+): OperatorFunction<T, [T | undefined, T]> {
+  let previous: T | undefined = initialPrevious;
+  return (source) => computed(() => [previous, (previous = source())]);
 }

@@ -3,6 +3,7 @@ import {
   HostListener,
   Input,
   Output,
+  computed,
   effect,
   inject,
   signal,
@@ -29,11 +30,10 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
 
   private readonly _value$ = signal(this._ngControl?.value as T);
 
-  public readonly value$ = pairwise(
-    (currentValue, newValue) =>
-      this.compareTo$()(currentValue, newValue) ? newValue : currentValue,
-    this._value$()
-  )(this._value$);
+  public readonly value$ = computed(() => {
+    const [currentValue, newValue] = pairwise(this._value$())(this._value$)();
+    return this.compareTo$()(currentValue, newValue) ? newValue : currentValue;
+  });
 
   public readonly disabled$ = this._disabled$.asReadonly();
 
