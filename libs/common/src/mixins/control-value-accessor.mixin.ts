@@ -10,7 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { ControlValueAccessor, NgControl } from '@angular/forms';
+import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { skip } from 'rxjs';
 import { noop } from '../util';
 
@@ -54,12 +54,35 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   private readonly _disabled$ = signal(this.ngControl?.disabled ?? false);
 
   /**
-   * Internal value, which does not reflect {@link MixinControlValueAccessor.compareTo$}.
-   * In fact, this value is used to compute {@link MixinControlValueAccessor.value$}.
+   * A signal which tracks value changes.
    *
    * @ignore
    */
-  private readonly _value$ = signal(this.ngControl?.value as T);
+  private readonly _valueChange$ = signal<{
+    source: 'modelToView' | 'viewToModel';
+    value: T;
+  }>({
+    source: 'modelToView',
+    value: this.ngControl?.value as T,
+  });
+
+  /**
+   * Like {@link MixinControlValueAccessor._valueChange$} but filtered according to this {@link MixinControlValueAccessor.compareTo$}
+   *
+   * @ignore
+   */
+  private readonly _distinctValueChange$ = computed(
+    (() => {
+      let currentValueChange$ = this._valueChange$();
+      return () =>
+        !this.compareTo$()(
+          currentValueChange$.value,
+          this._valueChange$().value
+        )
+          ? (currentValueChange$ = this._valueChange$())
+          : currentValueChange$;
+    })()
+  );
 
   /**
    * The value of this mixin. If a control is present, it reflects it's value.
@@ -68,15 +91,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @see {@link MixinControlValueAccessor.ngControl}
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
-  public readonly value$ = computed(
-    (() => {
-      let currentValue = this._value$();
-      return () =>
-        !this.compareTo$()(currentValue, this._value$())
-          ? (currentValue = this._value$())
-          : currentValue;
-    })()
-  );
+  public readonly value$ = computed(() => this._distinctValueChange$().value);
 
   /**
    * Whether this mixin is disabled. If a control is present, it reflects it's disabled state.
@@ -87,22 +102,28 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public readonly disabled$ = this._disabled$.asReadonly();
 
   /**
-   * A comparator, which is used to determine {@link MixinControlValueAccessor.value$}. Defaults to strict equality.
+   * A comparator, which is used to determine {@link MixinControlValueAccessor._distinctValueChange$}.
    * Should return true, if two values are considered semanticly equal.
+   *
+   * Default: all values are considered not equal (in order to align with {@link FormControl.setValue}).
    */
-  public readonly compareTo$ = signal((a: T, b: T) => a === b);
+  public readonly compareTo$ = signal<(a: T, b: T) => boolean>(() => false);
 
   /**
-   * Ensures the control's value is up to date with the UI of this host.
+   * Ensures the control's value is up to date with this view.
    *
-   * @see {@link MixinControlValueAccessor.value$}
+   * @see {@link MixinControlValueAccessor._distinctValueChange$}
    * @see {@link MixinControlValueAccessor._onChange$}
    *
    * @ignore
    */
   private readonly _viewToModel$$ = effect(() =>
-    !untracked(this.compareTo$)(this.ngControl?.value, this.value$())
-      ? this._onChange$()(this.value$())
+    this._distinctValueChange$().source === 'viewToModel' &&
+    !untracked(this.compareTo$)(
+      this.ngControl?.value,
+      this._distinctValueChange$().value
+    )
+      ? this._onChange$()(this._distinctValueChange$().value)
       : undefined
   );
 
@@ -111,11 +132,11 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    */
   @Input()
   public set value(value: T) {
-    this._value$.set(value);
+    this._valueChange$.set({ source: 'viewToModel', value });
   }
 
   /**
-   * Overrides this default comparator.
+   * Sets this comparator.
    *
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
@@ -125,7 +146,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   }
 
   /**
-   * A hot observable representing changes of {@link MixinControlValueAccessor.value$}.
+   * A hot observable representing changes of {@link MixinControlValueAccessor._distinctValueChange$}.
    */
   // eslint-disable-next-line @angular-eslint/no-output-rename
   @Output('valueChange')
@@ -148,7 +169,8 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
 
   // control value accessor
 
-  public writeValue = (value: T) => this._value$.set(value);
+  public writeValue = (value: T) =>
+    this._valueChange$.set({ source: 'modelToView', value });
 
   public registerOnChange = (fn: (value: T) => void) => this._onChange$.set(fn);
 

@@ -117,7 +117,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       expect(mixin.value$()).toBe(-1);
     });
 
-    it('when setting a value via the control (Model -> UI), it should not trigger an UI -> Model update', () => {
+    it('when setting a value via the control (Model -> View), it should not trigger an View -> Model update', () => {
       const control = new FormControl<number>(777);
 
       const fixture = MockRender(
@@ -162,17 +162,21 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       mixin.value = 42;
       fixture.detectChanges();
 
-      // setting the 'same' value should be filtered
       mixin.value = 42;
+      fixture.detectChanges();
+
+      control.setValue(42);
       fixture.detectChanges();
 
       values$$.unsubscribe();
 
-      expect(values).toEqual([1, 1, 99, 99, 42, 42]);
+      expect(values).toEqual([1, 1, 99, 99, 42, 42, 42, 42]);
 
-      expect(spyOnChange).toHaveBeenCalledTimes(1);
+      expect(spyOnChange).toHaveBeenCalledTimes(2);
 
-      expect(spyOnChange).toHaveBeenCalledWith(42);
+      expect(spyOnChange).nthCalledWith(1, 42);
+
+      expect(spyOnChange).nthCalledWith(2, 42);
     });
 
     it('should update the value of the control', async () => {
