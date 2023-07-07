@@ -46,7 +46,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   private readonly _onTouched$ = signal<() => void>(noop);
 
   /**
-   * A signal which tracks value changes.
+   * Value changes (model <-> view ).
    *
    * @ignore
    */
@@ -84,6 +84,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   /**
    * The value of this mixin. If a control is present, it reflects it's value.
    *
+   * @see {@link MixinControlValueAccessor.value}
    * @see {@link MixinControlValueAccessor.writeValue}
    * @see {@link MixinControlValueAccessor.ngControl}
    * @see {@link MixinControlValueAccessor.compareTo$}
@@ -99,7 +100,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public readonly disabled$ = signal(this.ngControl?.disabled ?? false);
 
   /**
-   * A comparator, which is used to determine {@link MixinControlValueAccessor._distinctValueChange$}.
+   * A comparator, which is used to determine {@link MixinControlValueAccessor.value$}.
    * Should return true, if two values are considered semanticly equal.
    *
    * Default: all values are considered not equal (in order to align with {@link FormControl.setValue}).
@@ -130,8 +131,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   /**
    * Ensures the model's disable state is up to date with this view.
    *
-   * @see {@link MixinControlValueAccessor._distinctValueChange$}
-   * @see {@link MixinControlValueAccessor._onChange$}
+   * @see {@link MixinControlValueAccessor.disabled$}
    *
    * @ignore
    */
@@ -168,7 +168,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   }
 
   /**
-   * A hot observable representing changes of {@link MixinControlValueAccessor._distinctValueChange$}.
+   * A hot observable representing changes of {@link MixinControlValueAccessor.value$}.
    */
   // eslint-disable-next-line @angular-eslint/no-output-rename
   @Output('valueChange')
