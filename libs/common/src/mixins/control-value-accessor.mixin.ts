@@ -46,14 +46,6 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   private readonly _onTouched$ = signal<() => void>(noop);
 
   /**
-   * This value is set by the forms api, if a control is present.
-   *
-   * @see {@link MixinControlValueAccessor.setDisabledState}
-   * @see {@link MixinControlValueAccessor.ngControl}
-   */
-  private readonly _disabled$ = signal(this.ngControl?.disabled ?? false);
-
-  /**
    * A signal which tracks value changes.
    *
    * @ignore
@@ -104,7 +96,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @see {@link MixinControlValueAccessor.setDisabledState}
    * @see {@link MixinControlValueAccessor.ngControl}
    */
-  public readonly disabled$ = this._disabled$.asReadonly();
+  public readonly disabled$ = signal(this.ngControl?.disabled ?? false);
 
   /**
    * A comparator, which is used to determine {@link MixinControlValueAccessor._distinctValueChange$}.
@@ -115,14 +107,14 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public readonly compareTo$ = signal<(a: T, b: T) => boolean>(() => false);
 
   /**
-   * Ensures the model (control) is up to date with this view.
+   * Ensures the model's value is up to date with this view.
    *
    * @see {@link MixinControlValueAccessor._distinctValueChange$}
    * @see {@link MixinControlValueAccessor._onChange$}
    *
    * @ignore
    */
-  private readonly _viewToModel$$ = effect(
+  private readonly _valueViewToModel$$ = effect(
     () =>
       // ensure the value change is from view to model
       this._distinctValueChange$().source === 'viewToModel' &&
@@ -135,10 +127,18 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
       this._onChange$()(this._distinctValueChange$().value)
   );
 
-  private readonly _disabled$$ = effect(
+  /**
+   * Ensures the model's disable state is up to date with this view.
+   *
+   * @see {@link MixinControlValueAccessor._distinctValueChange$}
+   * @see {@link MixinControlValueAccessor._onChange$}
+   *
+   * @ignore
+   */
+  private readonly _disabledViewToModel$$ = effect(
     () =>
       this.ngControl?.control &&
-      this.ngControl.control[this.disabled$() ? 'disable' : 'enable']
+      this.ngControl.control[this.disabled$() ? 'disable' : 'enable']()
   );
 
   /**
@@ -147,6 +147,14 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   @Input()
   public set value(value: T) {
     this._valueChange$.set({ source: 'viewToModel', value });
+  }
+
+  /**
+   * Sets this disabled state.
+   */
+  @Input()
+  public set disabled(disabled: boolean) {
+    this.disabled$.set(disabled);
   }
 
   /**
@@ -191,5 +199,5 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public registerOnTouched = (fn: () => void) => this._onTouched$.set(fn);
 
   public setDisabledState = (disabled: boolean) =>
-    this._disabled$.set(disabled);
+    this.disabled$() !== disabled && this.disabled$.set(disabled);
 }

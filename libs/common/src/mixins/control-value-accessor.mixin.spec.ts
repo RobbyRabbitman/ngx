@@ -78,6 +78,29 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       expect(mixin).toBe(ngControl.valueAccessor);
     });
 
+    it('should update the disabled state of the control', () => {
+      const fixture = MockRender(`<some-component ngModel></some-component>`);
+
+      const mixin = ngMocks.findInstance(MixinControlValueAccessor);
+
+      const ngControl = ngMocks.findInstance(NgControl);
+
+      mixin.disabled = true;
+      fixture.detectChanges();
+
+      expect(ngControl.disabled).toBe(true);
+
+      mixin.disabled = false;
+      fixture.detectChanges();
+
+      expect(ngControl.disabled).toBe(false);
+
+      mixin.disabled = true;
+      fixture.detectChanges();
+
+      expect(ngControl.disabled).toBe(true);
+    });
+
     it('should reflect the disabled state of the control', () => {
       MockRender(`<some-component ngModel></some-component>`);
 
