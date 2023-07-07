@@ -73,15 +73,20 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    */
   private readonly _distinctValueChange$ = computed(
     (() => {
+      // keep track of the current value change
       let currentValueChange$ = this._valueChange$();
       return () =>
+        // if there is a value change according to this comparator update the current value change
         !this.compareTo$()(
           currentValueChange$.value,
           this._valueChange$().value
         )
           ? (currentValueChange$ = this._valueChange$())
           : currentValueChange$;
-    })()
+    })(),
+    // non-primitives are considered not equal -> override
+    // https://github.com/angular/angular/blob/2b0850331105f72d9128e63dfffbb1d8af883525/packages/core/src/signals/src/api.ts#L86
+    { equal: (a, b) => a === b }
   );
 
   /**
@@ -110,21 +115,30 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   public readonly compareTo$ = signal<(a: T, b: T) => boolean>(() => false);
 
   /**
-   * Ensures the control's value is up to date with this view.
+   * Ensures the model (control) is up to date with this view.
    *
    * @see {@link MixinControlValueAccessor._distinctValueChange$}
    * @see {@link MixinControlValueAccessor._onChange$}
    *
    * @ignore
    */
-  private readonly _viewToModel$$ = effect(() =>
-    this._distinctValueChange$().source === 'viewToModel' &&
-    !untracked(this.compareTo$)(
-      this.ngControl?.value,
-      this._distinctValueChange$().value
-    )
-      ? this._onChange$()(this._distinctValueChange$().value)
-      : undefined
+  private readonly _viewToModel$$ = effect(
+    () =>
+      // ensure the value change is from view to model
+      this._distinctValueChange$().source === 'viewToModel' &&
+      // ensure a value change according to this comparator
+      !untracked(this.compareTo$)(
+        this.ngControl?.value,
+        this._distinctValueChange$().value
+      ) &&
+      // update model
+      this._onChange$()(this._distinctValueChange$().value)
+  );
+
+  private readonly _disabled$$ = effect(
+    () =>
+      this.ngControl?.control &&
+      this.ngControl.control[this.disabled$() ? 'disable' : 'enable']
   );
 
   /**
