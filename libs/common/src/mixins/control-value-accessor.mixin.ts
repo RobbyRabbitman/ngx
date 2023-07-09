@@ -59,7 +59,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   });
 
   /**
-   * Like {@link MixinControlValueAccessor._valueChange$} but filtered according to this {@link MixinControlValueAccessor.compareTo$}
+   * Like {@link MixinControlValueAccessor._valueChange$} but distinct according to this {@link MixinControlValueAccessor.compareTo$}.
    *
    * @ignore
    */
@@ -103,7 +103,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * A comparator, which is used to determine {@link MixinControlValueAccessor.value$}.
    * Should return true, if two values are considered semanticly equal.
    *
-   * Default: all values are considered not equal (in order to align with {@link FormControl.setValue}).
+   * Default: all values are considered not equal in order to align with {@link FormControl.setValue}.
    */
   public readonly compareTo$ = signal<(a: T, b: T) => boolean>(() => false);
 
@@ -119,7 +119,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
     () =>
       // ensure the value change is from view to model
       this._distinctValueChange$().source === 'viewToModel' &&
-      // ensure a value change according to this comparator
+      // ensure a distinc value change according to this comparator
       !untracked(this.compareTo$)(
         this.ngControl?.value,
         this._distinctValueChange$().value

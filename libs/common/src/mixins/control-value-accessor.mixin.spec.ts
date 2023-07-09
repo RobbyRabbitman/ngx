@@ -38,11 +38,19 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     ])
   );
 
-  describe('should be created', () => {
-    it('without a control directive', () =>
+  describe('without a control directive', () => {
+    it('should be created', () =>
       expect(MockRender(SomeComponent).point.componentInstance).toBeTruthy());
 
-    it('with a control directive', () => {
+    it('should enabled by default', () => {
+      MockRender(SomeComponent);
+
+      expect(findMixin().disabled$()).toBe(false);
+    });
+  });
+
+  describe('with a control directive', () => {
+    it('should be created', () => {
       expect(
         MockRender(`<some-component ngModel></some-component>`).point
           .componentInstance
@@ -57,17 +65,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
         ).point.componentInstance
       ).toBeTruthy();
     });
-  });
 
-  describe('without a control directive', () => {
-    it('should enabled by default', () => {
-      MockRender(SomeComponent);
-
-      expect(findMixin().disabled$()).toBe(false);
-    });
-  });
-
-  describe('with a control directive', () => {
     it('should register itself as the value accessor', () => {
       MockRender(`<some-component ngModel></some-component>`);
 
