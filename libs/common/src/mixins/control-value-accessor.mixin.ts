@@ -10,7 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
+import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { skip } from 'rxjs';
 import { noop } from '../util';
 
@@ -110,21 +110,10 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @ignore
    */
   private readonly _distinctValueChange$ = computed(
-    (() => {
-      // keep track of the current value change
-      let currentValueChange$ = this._valueChange$();
-      return () =>
-        // if there is a value change according to this comparator update the current value change
-        !this.compareTo$()(
-          currentValueChange$.value,
-          this._valueChange$().value
-        )
-          ? (currentValueChange$ = this._valueChange$())
-          : currentValueChange$;
-    })(),
-    // non-primitives are considered not equal -> override
-    // https://github.com/angular/angular/blob/2b0850331105f72d9128e63dfffbb1d8af883525/packages/core/src/signals/src/api.ts#L86
-    { equal: (a, b) => a === b }
+    () => this._valueChange$(),
+    {
+      equal: (a, b) => this.compareTo$()(a.value, b.value),
+    }
   );
 
   /**
@@ -152,9 +141,9 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * A comparator, which is used to determine {@link MixinControlValueAccessor.value$}.
    * Should return true, if two values are considered semanticly equal.
    *
-   * Default: all values are considered not equal in order to align with {@link FormControl.setValue}.
+   * Default: same value in memory via Object.is - like Change Detection for Inputs
    */
-  public readonly compareTo$ = signal<(a: T, b: T) => boolean>(() => false);
+  public readonly compareTo$ = signal<(a?: T, b?: T) => boolean>(Object.is);
 
   /**
    * Ensures the model's value is up to date with this view.
@@ -212,8 +201,8 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
   @Input()
-  public set compareTo(compareTo: (a: T, b: T) => boolean) {
-    this.compareTo$.set(compareTo);
+  public set compareTo(compareTo: (a?: T, b?: T) => boolean) {
+    typeof compareTo === 'function' && this.compareTo$.set(compareTo);
   }
 
   /**

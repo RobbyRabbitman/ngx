@@ -6,9 +6,9 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
-import { merge } from 'rxjs';
 import { noop } from '../util';
 import { MixinControlValueAccessor } from './control-value-accessor.mixin';
+import exp = require('constants');
 
 jest.mock('../util', () => ({
   ...jest.requireActual('../util'),
@@ -32,7 +32,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     hostDirectives: [
       {
         directive: MixinControlValueAccessor,
-        inputs: ['value'],
+        inputs: ['value', 'disabled', 'compareTo'],
         // eslint-disable-next-line @angular-eslint/no-outputs-metadata-property
         outputs: ['valueChange'],
       },
@@ -54,7 +54,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     hostDirectives: [
       {
         directive: MixinControlValueAccessor,
-        inputs: ['value', 'disabled'],
+        inputs: ['value', 'disabled', 'compareTo'],
         // eslint-disable-next-line @angular-eslint/no-outputs-metadata-property
         outputs: ['valueChange'],
       },
@@ -109,10 +109,10 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     expect(mixin().ngControl?.control).not.toBe(hostControl);
   });
 
-  it('should consider every value change as distinct per default', async () => {
-    const fixture = MockRender(CustomCvaComponent);
+  it('should compare in memory value per default', async () => {
+    const fixture = MockRender(CustomCvaComponent, {});
 
-    const values: number[] = [];
+    const values: unknown[] = [];
 
     const values$$ = mixin().valueChange$.subscribe({
       next: (x) => values.push(x),
@@ -128,10 +128,12 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     fixture.detectChanges();
     mixin().value = { foo: 1 };
     fixture.detectChanges();
-    mixin().value = 99;
+    mixin().value = true;
+    fixture.detectChanges();
+    mixin().value = true;
     fixture.detectChanges();
 
-    expect(values).toEqual([42, 42, { foo: 1 }, { foo: 1 }, { foo: 1 }, 99]);
+    expect(values).toEqual([42, { foo: 1 }, { foo: 1 }, { foo: 1 }, true]);
 
     values$$.unsubscribe();
   });
@@ -139,18 +141,43 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
   describe('without a control directive', () => {
     it('should be created', () =>
       expect(
-        MockRender(CustomCvaComponent).point.componentInstance
+        MockRender(CustomCvaComponent, {}).point.componentInstance
       ).toBeTruthy());
 
+    it('should accept a comparator', () => {
+      const fixture = MockRender(CustomCvaComponent, {});
+
+      const values: unknown[] = [];
+
+      const values$$ = mixin().valueChange$.subscribe({
+        next: (x) => values.push(x),
+      });
+
+      mixin().compareTo = (a, b) => a?.id === b?.id;
+      mixin().value = { id: 33 };
+      fixture.detectChanges();
+      expect(values).toEqual([{ id: 33 }]);
+
+      mixin().value = { id: 33 };
+      fixture.detectChanges();
+      expect(values).toEqual([{ id: 33 }]);
+
+      mixin().value = { id: 1 };
+      fixture.detectChanges();
+      expect(values).toEqual([{ id: 33 }, { id: 1 }]);
+
+      values$$.unsubscribe();
+    });
+
     it('should be enabled by default', () => {
-      MockRender(CustomCheckboxComponent);
+      MockRender(CustomCheckboxComponent, {});
 
       expect(mixin().disabled$()).toBe(false);
       expect(checkbox().disabled).toBe(false);
     });
 
     it('should be capable of disablement', () => {
-      const fixture = MockRender(CustomCheckboxComponent);
+      const fixture = MockRender(CustomCheckboxComponent, {});
 
       mixin().disabled = true;
       fixture.detectChanges();
@@ -160,13 +187,13 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
     });
 
     it('should have undefined as a value per default', () => {
-      MockRender(CustomCvaComponent);
+      MockRender(CustomCvaComponent, {});
 
       expect(mixin().value$()).toBeUndefined();
     });
 
     it('should have a value', () => {
-      const fixture = MockRender(CustomCheckboxComponent);
+      const fixture = MockRender(CustomCheckboxComponent, {});
 
       mixin().value = true;
       fixture.detectChanges();
@@ -182,7 +209,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
     describe('should do nothing effecting the control value accessor interface', () => {
       it('when updating view to model', () => {
-        const fixture = MockRender(CustomCvaComponent);
+        const fixture = MockRender(CustomCvaComponent, {});
 
         mixin().value = 42;
         fixture.detectChanges();
@@ -191,7 +218,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       });
 
       it('when the view is considered touched', () => {
-        const fixture = MockRender(CustomCvaComponent);
+        const fixture = MockRender(CustomCvaComponent, {});
 
         (noop as jest.Mock).mockReset();
         mixin().blur();
@@ -213,6 +240,14 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
           control: new FormControl(),
         }).point.componentInstance
       ).toBeTruthy();
+    });
+
+    it('should have its initial value of the control', () => {
+      MockRender(`<custom-cva [formControl]="control"></custom-cva>`, {
+        control: new FormControl(42),
+      });
+
+      expect(mixin().value$()).toBe(42);
     });
 
     it('should register itself as the value accessor', () => {
@@ -305,10 +340,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
       expect(control().value).toBe(777);
 
-      const values$$ = merge(
-        control().valueChanges,
-        mixin().valueChange$
-      ).subscribe({
+      const values$$ = mixin().valueChange$.subscribe({
         next: (x) => values.push(x),
       });
 
@@ -324,15 +356,14 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       mixin().value = 42;
       fixture.detectChanges();
 
+      control().setValue(42);
+      fixture.detectChanges();
+
       values$$.unsubscribe();
 
-      expect(values).toEqual([1, 1, 99, 99, 42, 42, 42, 42]);
-
-      expect(spyOnChange).toHaveBeenCalledTimes(2);
+      expect(values).toEqual([1, 99, 42]);
 
       expect(spyOnChange).nthCalledWith(1, 42);
-
-      expect(spyOnChange).nthCalledWith(2, 42);
     });
 
     it('should update the value of the control', async () => {
