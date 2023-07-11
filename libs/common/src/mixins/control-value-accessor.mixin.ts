@@ -14,8 +14,57 @@ import { ControlValueAccessor, FormControl, NgControl } from '@angular/forms';
 import { skip } from 'rxjs';
 import { noop } from '../util';
 
+type MixinControlValueAccessorChangeSource = 'model' | 'view';
+
+interface MixinControlValueAccessorChange<T> {
+  source: MixinControlValueAccessorChangeSource;
+  value: T;
+}
+
 /**
  * This Directive mixes in a generic implemantion of the {@link ControlValueAccessor}.
+ *
+ * @example
+ *
+  ### Custom Checkbox
+  ```html
+  <custom-checkbox [formControl]="control">fancy label</custom-checkbox>
+  ```
+  The following custom checkbox component implements the {@link ControlValueAccessor}.
+  When declaring this directive as a host directive, the checkbox inherits the implementation by the composition api.
+  Via DI the checkbox is able to access the control value accessor and utilize its api in order to sync the checkbox with the control and vice versa:
+  ```ts
+  import { MixinControlValueAccessor } from '@robby-rabbitman/ngx-common';
+
+  @Component({
+    selector: 'custom-checkbox',
+    standalone: true,
+    template: `<label [for]="id"><ng-content></ng-content></label>
+      <input
+        [id]="id"
+        (change)="cva.value = $event.target.checked"
+        (blur)="cva.blur()"
+        [value]="cva.value$()"
+        [disabled]="cva.disabled$()"
+        type="checkbox"
+      />`,
+    hostDirectives: [
+      {
+        directive: MixinControlValueAccessor,
+        inputs: ['value', 'disabled'],
+        outputs: ['valueChange'],
+      }
+    ],
+  })
+  class CustomCheckbox {
+    public static nextId = 0
+
+    public cva = inject(MixinControlValueAccessor);
+
+    @Input()
+    public id = CustomCheckbox.nextId++;
+  }
+  ```
  */
 @Directive({
   standalone: true,
@@ -50,11 +99,8 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    *
    * @ignore
    */
-  private readonly _valueChange$ = signal<{
-    source: 'modelToView' | 'viewToModel';
-    value: T;
-  }>({
-    source: 'modelToView',
+  private readonly _valueChange$ = signal<MixinControlValueAccessorChange<T>>({
+    source: 'model',
     value: this.ngControl?.value as T,
   });
 
@@ -89,7 +135,10 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    * @see {@link MixinControlValueAccessor.ngControl}
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
-  public readonly value$ = computed(() => this._distinctValueChange$().value);
+  public readonly value$ = computed(() => this._distinctValueChange$().value, {
+    // distinctiveness is already checked by _distinctValueChange$, so every value must be considered distinct.
+    equal: () => false,
+  });
 
   /**
    * Whether this mixin is disabled. If a control is present, it reflects it's disabled state.
@@ -118,7 +167,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   private readonly _valueViewToModel$$ = effect(
     () =>
       // ensure the value change is from view to model
-      this._distinctValueChange$().source === 'viewToModel' &&
+      this._distinctValueChange$().source === 'view' &&
       // ensure a distinc value change according to this comparator
       !untracked(this.compareTo$)(
         this.ngControl?.value,
@@ -146,7 +195,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    */
   @Input()
   public set value(value: T) {
-    this._valueChange$.set({ source: 'viewToModel', value });
+    this._valueChange$.set({ source: 'view', value });
   }
 
   /**
@@ -192,7 +241,7 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   // control value accessor
 
   public writeValue = (value: T) =>
-    this._valueChange$.set({ source: 'modelToView', value });
+    this._valueChange$.set({ source: 'model', value });
 
   public registerOnChange = (fn: (value: T) => void) => this._onChange$.set(fn);
 
