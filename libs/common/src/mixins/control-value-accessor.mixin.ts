@@ -109,19 +109,15 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
    *
    * @ignore
    */
-  private readonly _distinctValueChange$ = computed(
-    () => this._valueChange$(),
-    {
-      equal: (a, b) => this.compareTo$()(a.value, b.value),
-    }
-  );
+  private readonly _distinctValueChange$ = computed(this._valueChange$, {
+    equal: (a, b) => this.compareTo$()(a.value, b.value),
+  });
 
   /**
    * The value of this mixin. If a control is present, it reflects it's value.
    *
    * @see {@link MixinControlValueAccessor.value}
    * @see {@link MixinControlValueAccessor.writeValue}
-   * @see {@link MixinControlValueAccessor.ngControl}
    * @see {@link MixinControlValueAccessor.compareTo$}
    */
   public readonly value$ = computed(() => this._distinctValueChange$().value, {

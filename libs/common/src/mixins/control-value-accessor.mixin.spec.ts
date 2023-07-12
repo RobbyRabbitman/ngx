@@ -8,7 +8,6 @@ import {
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
 import { noop } from '../util';
 import { MixinControlValueAccessor } from './control-value-accessor.mixin';
-import exp = require('constants');
 
 jest.mock('../util', () => ({
   ...jest.requireActual('../util'),
