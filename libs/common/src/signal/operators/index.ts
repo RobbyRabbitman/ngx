@@ -1,3 +1,4 @@
+export * from './combination';
 export * from './conditional';
 export * from './empty';
 export * from './pipe';
