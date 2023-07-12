@@ -13,6 +13,12 @@ import { MockSelector } from './mock-selector';
 import { throwNgxsTestingError } from './ngxs-testing-errors';
 import { ORIGINAL_STORE } from './original-store';
 
+/**
+ * Only works for 'StateToken', '@Select', or "createSelector" selectors.
+ *
+ * @param selector
+ * @returns a string identifying the specified selector. Throwns an error if the selector can't be identified.
+ */
 export const identifySelector = (selector: unknown) => {
   const meta = getSelectorMetadata(selector);
   const key =
