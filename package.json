@@ -2,7 +2,9 @@
   "name": "@robby-rabbitman/ngx",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "prepare": "husky install"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "~16.0.0",

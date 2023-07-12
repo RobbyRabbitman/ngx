@@ -29,3 +29,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --follow-tags
+      - run: ./.github/workflows/update-coverage.sh
+        shell: bash
