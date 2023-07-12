@@ -8,7 +8,7 @@ then
   exit 0
 fi
 
-affected=$(eval "nx print-affected | node -pe 'JSON.parse(fs.readFileSync(0)).projects.join(\", \")'")
+affected=$(eval "npx nx print-affected | node -pe 'JSON.parse(fs.readFileSync(0)).projects.join(\", \")'")
 
 echo "affected: $affected"
 
