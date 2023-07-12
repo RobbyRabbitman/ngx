@@ -33,3 +33,5 @@ jobs:
           chmod +x ./.github/workflows/update-coverage.sh
           ./.github/workflows/update-coverage.sh
         shell: bash
+        env:
+          TEMP_DIR: ${{ runner.temp }}
