@@ -27,6 +27,7 @@ jobs:
       # TODO modify test target (?) custom test = test + coverage with dependsOn key
       - run: npx nx affected -t coverage-badges --parallel=3
       - run: npx nx affected -t build --parallel=3
+      - run: rm -f .git/index.lock # https://github.com/RobbyRabbitman/ngx/actions/runs/5548590199/jobs/10131779610
       - run: npx nx affected -t version --parallel=3
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
