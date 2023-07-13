@@ -36,6 +36,9 @@
         }
       }
     },
+    "coverage-badges": {
+      "command": "npx jest-coverage-badges --input 'coverage/libs/common/coverage-summary.json' --output 'coverage/libs/common/badges'"
+    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
