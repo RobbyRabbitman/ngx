@@ -20,6 +20,47 @@
       "options": {
         "lintFilePatterns": ["apps/ngx/**/*.ts", "apps/ngx/**/*.html"]
       }
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/ngx/.storybook",
+        "browserTarget": "ngx:build-storybook",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/ngx",
+        "configDir": "apps/ngx/.storybook",
+        "browserTarget": "ngx:build-storybook",
+        "compodoc": false
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "static-storybook": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "ngx:build-storybook",
+        "staticFilePath": "dist/storybook/ngx"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "ngx:build-storybook:ci"
+        }
+      }
     }
   }
 }

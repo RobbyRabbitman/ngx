@@ -16,8 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@robby-rabbitman/common": ["libs/common/src/index.ts"],
-      "@robby-rabbitman/ngxs-testing": ["libs/ngxs-testing/src/index.ts"],
-      "@robby-rabbitman/ngx": ["apps/ngx/src/index.ts"]
+      "@robby-rabbitman/ngx": ["apps/ngx/src/index.ts"],
+      "@robby-rabbitman/ngxs-testing": ["libs/ngxs-testing/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
