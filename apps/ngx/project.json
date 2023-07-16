@@ -1,0 +1,25 @@
+{
+  "name": "ngx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ngx/src",
+  "prefix": "ngx",
+  "tags": [],
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "apps/ngx/ng-package.json",
+        "tsConfig": "apps/ngx/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/ngx/**/*.ts", "apps/ngx/**/*.html"]
+      }
+    }
+  }
+}
