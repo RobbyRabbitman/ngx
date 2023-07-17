@@ -1,12 +1,16 @@
 import {
   Directive,
+  ENVIRONMENT_INITIALIZER,
   ElementRef,
   Injectable,
   Input,
+  Provider,
   effect,
   inject,
   signal,
 } from '@angular/core';
+import { first, skip } from 'rxjs';
+import { resized } from '../util/resize-observer';
 
 /**
  * Represents an icon sprite.
@@ -32,7 +36,7 @@ export interface IconSprite {
    * @param icon
    * @returns a list of classes which are needed to properly display an icon of this sprite.
    */
-  classBuilder: (icon: string) => string[];
+  classes?: (icon: string) => string[];
 }
 
 /**
@@ -64,6 +68,20 @@ export class IconSprites {
 }
 
 /**
+ *
+ * @param sprites
+ * @returns an environment provider which registers icon sprites.
+ */
+export const provideIconSprites = (...sprites: IconSprite[]): Provider => ({
+  provide: ENVIRONMENT_INITIALIZER,
+  multi: true,
+  useFactory: () => {
+    const service = inject(IconSprites);
+    return () => sprites.forEach((sprite) => service.register(sprite));
+  },
+});
+
+/**
  * Renders an icon of a registered {@link IconSprite}
  */
 @Directive({
@@ -74,7 +92,7 @@ export class SvgIcon {
   /**
    * @ignore
    */
-  public _element = inject(ElementRef).nativeElement as SVGElement;
+  public _element = inject(ElementRef).nativeElement as SVGGraphicsElement;
 
   /**
    * @ignore
@@ -110,38 +128,56 @@ export class SvgIcon {
    */
   public _renderEffect = effect(() => {
     const sprite = this.sprite();
-    this._handleChange(
+    this._render(
       this._element,
       this.icon(),
       sprite != null ? this._sprites.get(sprite) : undefined
     );
   });
 
-  public _classes?: string[];
-
   /**
    * @ignore
    */
-  public _handleChange = (
-    element: SVGElement,
-    icon?: string,
-    sprite?: IconSprite
-  ) => {
-    // clear child nodes of this svg
-    element.replaceChildren();
+  public _render = (() => {
+    let classes: string[] = [];
+    return (element: SVGElement, icon?: string, sprite?: IconSprite) => {
+      // clear child nodes of this svg
+      element.replaceChildren();
 
-    // remove old classes
-    element.classList.remove(...(this._classes ?? []));
+      // remove old classes
+      element.classList.remove(...(classes ?? []));
 
-    // append a new child node referencing the new icon of the new sprite if they are present.
-    if (icon != null && sprite != null) {
-      const useElement = document.createElementNS(element.namespaceURI, 'use');
+      // append a new child node referencing the new icon of the new sprite if they are present.
+      if (icon != null && sprite != null) {
+        const useElement = document.createElementNS(
+          element.namespaceURI,
+          'use'
+        );
 
-      element.appendChild(useElement);
+        element.appendChild(useElement);
 
-      element.classList.add(...(this._classes = sprite.classBuilder(icon)));
+        // add classes if classes function was configured
+        if (sprite.classes != null)
+          element.classList.add(...(classes = sprite.classes(icon)));
 
-      useElement.setAttribute('href', sprite.path(icon));
-    }
-  };
+        useElement.setAttribute('href', sprite.path(icon));
+
+        // crop svg
+        resized(useElement)
+          .pipe(
+            // after icon was created => skip first
+            skip(1),
+            // after icon was rendered => first resize
+            first()
+          )
+          .subscribe({
+            next: ([{ contentRect }]) =>
+              this._element.setAttribute(
+                'viewBox',
+                `0 0 ${contentRect.width} ${contentRect.height}`
+              ),
+          });
+      }
+    };
+  })();
 }

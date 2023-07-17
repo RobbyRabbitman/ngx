@@ -43,16 +43,13 @@ describe('SvgIcon', () => {
       svg = fixture.point.nativeElement;
 
       ngMocks.get(IconSprites).register({
-        classBuilder: (icon) => ['some-sprite-class', `${icon}-class`],
+        classes: (icon) => ['some-sprite-class', `${icon}-class`],
         name: 'some-sprite',
         path: (icon) => `some/path/${icon}`,
       });
 
       ngMocks.get(IconSprites).register({
-        classBuilder: (icon) => [
-          'some-other-sprite-class',
-          `${icon}-other-class`,
-        ],
+        classes: (icon) => ['some-other-sprite-class', `${icon}-other-class`],
         name: 'some-other-sprite',
         path: (icon) => `some/other/path/${icon}`,
       });
@@ -117,7 +114,7 @@ describe('SvgIcon', () => {
       svg = document.createElement('svg') as unknown as SVGElement;
 
       sprite = {
-        classBuilder: (icon) => ['some-sprite-class', `${icon}-class`],
+        classes: (icon) => ['some-sprite-class', `${icon}-class`],
         name: 'some-sprite',
         path: (icon) => `some/path/${icon}`,
       };
@@ -132,7 +129,7 @@ describe('SvgIcon', () => {
       expect(svg.childElementCount).toEqual(1);
       expect(svg.firstChild).toBe(div);
 
-      icon._handleChange(svg, undefined, undefined);
+      icon._render(svg, undefined, undefined);
 
       expect(svg.childElementCount).toEqual(0);
     });
@@ -144,7 +141,7 @@ describe('SvgIcon', () => {
         'some-class-which-should-not-be-removed'
       );
 
-      icon._handleChange(svg, 'some-icon', sprite);
+      icon._render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual(
         'some-class-which-should-not-be-removed some-sprite-class some-icon-class'
@@ -152,7 +149,7 @@ describe('SvgIcon', () => {
     });
 
     it('should append a new child node referencing the new icon of the new sprite if they are present', () => {
-      icon._handleChange(svg, 'some-icon', sprite);
+      icon._render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual('some-sprite-class some-icon-class');
 
