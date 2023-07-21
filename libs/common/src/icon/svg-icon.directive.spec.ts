@@ -129,7 +129,15 @@ describe('SvgIcon', () => {
       expect(svg.childElementCount).toEqual(1);
       expect(svg.firstChild).toBe(div);
 
-      icon._render(svg, undefined, undefined);
+      (
+        icon as unknown as {
+          _render: (
+            element: SVGElement,
+            icon?: string,
+            sprite?: IconSprite
+          ) => void;
+        }
+      )._render(svg, undefined, undefined);
 
       expect(svg.childElementCount).toEqual(0);
     });
@@ -141,7 +149,15 @@ describe('SvgIcon', () => {
         'some-class-which-should-not-be-removed'
       );
 
-      icon._render(svg, 'some-icon', sprite);
+      (
+        icon as unknown as {
+          _render: (
+            element: SVGElement,
+            icon?: string,
+            sprite?: IconSprite
+          ) => void;
+        }
+      )._render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual(
         'some-class-which-should-not-be-removed some-sprite-class some-icon-class'
@@ -149,7 +165,15 @@ describe('SvgIcon', () => {
     });
 
     it('should append a new child node referencing the new icon of the new sprite if they are present', () => {
-      icon._render(svg, 'some-icon', sprite);
+      (
+        icon as unknown as {
+          _render: (
+            element: SVGElement,
+            icon?: string,
+            sprite?: IconSprite
+          ) => void;
+        }
+      )._render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual('some-sprite-class some-icon-class');
 

@@ -4,6 +4,7 @@
   "overrides": [
     {
       "files": ["*.ts"],
+      "excludedFiles": ["*.stories.ts"],
       "rules": {
         "@angular-eslint/directive-selector": [
           "error",

@@ -92,24 +92,25 @@ export class SvgIcon {
   /**
    * @ignore
    */
-  public _element = inject(ElementRef).nativeElement as SVGGraphicsElement;
+  private readonly _element = inject(ElementRef)
+    .nativeElement as SVGGraphicsElement;
 
   /**
    * @ignore
    */
-  public _sprites = inject(IconSprites);
+  private readonly _sprites = inject(IconSprites);
 
   /**
    * The icon to render of this {@link SvgIcon.sprite}.
    */
-  public icon = signal<string | undefined>(undefined);
+  public readonly icon = signal<string | undefined>(undefined);
 
   /**
    * The name of the sprite of this {@link SvgIcon}.
    *
    * @see {@link IconSprite}
    */
-  public sprite = signal<string | undefined>(undefined);
+  public readonly sprite = signal<string | undefined>(undefined);
 
   @Input('ngxSvgIcon')
   public set _icon(icon: string | undefined) {
@@ -126,7 +127,7 @@ export class SvgIcon {
    *
    * @ignore
    */
-  public _renderEffect = effect(() => {
+  private readonly _renderEffect = effect(() => {
     const sprite = this.sprite();
     this._render(
       this._element,
@@ -138,7 +139,7 @@ export class SvgIcon {
   /**
    * @ignore
    */
-  public _render = (() => {
+  private readonly _render = (() => {
     let classes: string[] = [];
     return (element: SVGElement, icon?: string, sprite?: IconSprite) => {
       // clear child nodes of this svg
