@@ -34,7 +34,7 @@ export interface IconSprite {
   /**
    *
    * @param icon
-   * @returns a list of classes which are needed to properly display an icon of this sprite.
+   * @returns a list of classes that are applied to the svg icon.
    */
   classes?: (icon: string) => string[];
 }
