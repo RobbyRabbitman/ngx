@@ -10,5 +10,5 @@ module.exports = {
       statements: 0,
     },
   },
-  coverageReporters: ['json-summary'],
+  coverageReporters: [...nxPreset.coverageReporters, 'json-summary'],
 };
