@@ -4,6 +4,7 @@ import {
   ElementRef,
   EventEmitter,
   inject,
+  InjectionToken,
   Output,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -25,6 +26,22 @@ export const resized = <E extends Element>(element: E) =>
   });
 
 /**
+ * Token which represents a stream of resizes.
+ */
+export const RESIZED = new InjectionToken<Observable<ResizeObserverEntry>>(
+  'NGX Resized'
+);
+
+/**
+ *
+ * @returns provides {@link RESIZED} with the element being observed referenced by {@link ElementRef}.
+ */
+export const provideResized = () => ({
+  provide: RESIZED,
+  useFactory: () => resized(inject(ElementRef).nativeElement),
+});
+
+/**
  * Attaches a {@link ResizeObserver}.
  *
  * @see {@link Resized.resized$}
@@ -32,6 +49,7 @@ export const resized = <E extends Element>(element: E) =>
 @Directive({
   selector: '[ngxResized]',
   standalone: true,
+  providers: [provideResized()],
 })
 export class Resized {
   /**
@@ -42,7 +60,7 @@ export class Resized {
     const cdr = inject(ChangeDetectorRef);
     const resized$ = new EventEmitter<ResizeObserverEntry>();
 
-    resized(inject(ElementRef).nativeElement)
+    inject(RESIZED)
       .pipe(takeUntilDestroyed())
       .subscribe({
         next: (entry) => {
