@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { first, skip } from 'rxjs';
-import { resized } from '../util/resize-observer';
+import { resized } from '../util/resized';
 
 /**
  * Represents an icon sprite.
@@ -172,7 +172,7 @@ export class SvgIcon {
             first()
           )
           .subscribe({
-            next: ([{ contentRect }]) =>
+            next: ({ contentRect }) =>
               this._element.setAttribute(
                 'viewBox',
                 `0 0 ${contentRect.width} ${contentRect.height}`
