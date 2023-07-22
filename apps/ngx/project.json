@@ -8,10 +8,9 @@
   "implicitDependencies": ["common", "ngxs-testing"],
   "targets": {
     "build": {
-      "executor": "@nx/angular:package",
+      "executor": "@nx/angular:ng-packagr-lite",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "apps/ngx/ng-package.json",
         "tsConfig": "apps/ngx/tsconfig.lib.json"
       }
     },
