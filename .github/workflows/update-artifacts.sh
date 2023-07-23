@@ -30,7 +30,9 @@ git restore --staged .
 cp -Tr $tmpDir/coverage/ coverage/
 cp -Tr $tmpDir/storybook/ storybook/
 
-git add .
+git add coverage
+git add storybook
+
 git commit -m "build(artifacts): update coverage for $affected"
 git push origin artifacts
 
