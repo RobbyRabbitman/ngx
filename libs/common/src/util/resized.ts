@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
  * @returns an observable based on a {@link ResizeObserver} observing the specified element.
  *
  */
-export const resized = <E extends Element>(element: E) =>
+export const resized = (element: Element) =>
   new Observable<ResizeObserverEntry>((subscriber) => {
     const observer = new ResizeObserver((entries) =>
       subscriber.next(entries.at(0))
