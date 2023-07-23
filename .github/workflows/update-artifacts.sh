@@ -21,6 +21,7 @@ echo "affected: $affected"
 mkdir -p $tmpDir
 
 cp -r ./coverage $tmpDir/coverage/
+cp -r ./storybook $tmpDir/storybook/
 
 git checkout -B artifacts origin/artifacts
 git restore --staged .

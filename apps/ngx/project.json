@@ -1,0 +1,69 @@
+{
+  "name": "ngx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ngx/src",
+  "prefix": "ngx",
+  "tags": [],
+  "projectType": "library",
+  "implicitDependencies": ["common", "ngxs-testing"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "apps/ngx/ng-package.json",
+        "tsConfig": "apps/ngx/tsconfig.lib.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/ngx/**/*.ts", "apps/ngx/**/*.html"]
+      }
+    },
+    "storybook": {
+      "executor": "@storybook/angular:start-storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "apps/ngx/.storybook",
+        "browserTarget": "ngx:build-storybook",
+        "compodoc": true,
+        "compodocArgs": ["-e", "json", "-d", "tmp/apps/ngx/.storybook"]
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "build-storybook": {
+      "executor": "@storybook/angular:build-storybook",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "outputDir": "dist/storybook/ngx",
+        "configDir": "apps/ngx/.storybook",
+        "browserTarget": "ngx:build-storybook",
+        "compodoc": true,
+        "compodocArgs": ["-e", "json", "-d", "tmp/apps/ngx/.storybook"]
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "static-storybook": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "ngx:build-storybook",
+        "staticFilePath": "dist/storybook/ngx"
+      },
+      "configurations": {
+        "ci": {
+          "buildTarget": "ngx:build-storybook:ci"
+        }
+      }
+    }
+  }
+}

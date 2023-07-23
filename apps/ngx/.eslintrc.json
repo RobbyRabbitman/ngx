@@ -4,7 +4,6 @@
   "overrides": [
     {
       "files": ["*.ts"],
-      "excludedFiles": ["*.stories.ts"],
       "rules": {
         "@angular-eslint/directive-selector": [
           "error",
@@ -21,10 +20,7 @@
             "prefix": "ngx",
             "style": "kebab-case"
           }
-        ],
-        "@angular-eslint/directive-class-suffix": "off",
-        "@angular-eslint/no-input-rename": "off",
-        "@angular-eslint/no-output-rename": "off"
+        ]
       },
       "extends": [
         "plugin:@nx/angular",

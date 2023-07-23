@@ -1,5 +1,6 @@
 import {
   Directive,
+  ENVIRONMENT_INITIALIZER,
   ElementRef,
   Injectable,
   Input,
@@ -7,6 +8,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { first, skip } from 'rxjs';
+import { resized } from '../util/resized';
 
 /**
  * Represents an icon sprite.
@@ -30,9 +33,9 @@ export interface IconSprite {
   /**
    *
    * @param icon
-   * @returns a list of classes which are needed to properly display an icon of this sprite.
+   * @returns a list of classes that are applied to the svg icon.
    */
-  classBuilder: (icon: string) => string[];
+  classes?: (icon: string) => string[];
 }
 
 /**
@@ -64,6 +67,20 @@ export class IconSprites {
 }
 
 /**
+ *
+ * @param sprites
+ * @returns an environment provider which registers icon sprites.
+ */
+export const provideIconSprites = (...sprites: IconSprite[]) => ({
+  provide: ENVIRONMENT_INITIALIZER,
+  multi: true,
+  useFactory: () => {
+    const service = inject(IconSprites);
+    return () => sprites.forEach((sprite) => service.register(sprite));
+  },
+});
+
+/**
  * Renders an icon of a registered {@link IconSprite}
  */
 @Directive({
@@ -74,24 +91,25 @@ export class SvgIcon {
   /**
    * @ignore
    */
-  public _element = inject(ElementRef).nativeElement as SVGElement;
+  private readonly _element = inject(ElementRef)
+    .nativeElement as SVGGraphicsElement;
 
   /**
    * @ignore
    */
-  public _sprites = inject(IconSprites);
+  private readonly _sprites = inject(IconSprites);
 
   /**
    * The icon to render of this {@link SvgIcon.sprite}.
    */
-  public icon = signal<string | undefined>(undefined);
+  public readonly icon = signal<string | undefined>(undefined);
 
   /**
    * The name of the sprite of this {@link SvgIcon}.
    *
    * @see {@link IconSprite}
    */
-  public sprite = signal<string | undefined>(undefined);
+  public readonly sprite = signal<string | undefined>(undefined);
 
   @Input('ngxSvgIcon')
   public set _icon(icon: string | undefined) {
@@ -108,40 +126,62 @@ export class SvgIcon {
    *
    * @ignore
    */
-  public _renderEffect = effect(() => {
+  private readonly _renderEffect = effect(() => {
     const sprite = this.sprite();
-    this._handleChange(
+    this._render(
       this._element,
       this.icon(),
       sprite != null ? this._sprites.get(sprite) : undefined
     );
   });
 
-  public _classes?: string[];
-
   /**
    * @ignore
    */
-  public _handleChange = (
-    element: SVGElement,
-    icon?: string,
-    sprite?: IconSprite
-  ) => {
-    // clear child nodes of this svg
-    element.replaceChildren();
+  private readonly _render = (() => {
+    let classes: string[] = [];
+    return (element: SVGElement, icon?: string, sprite?: IconSprite) => {
+      // clear child nodes of this svg
+      element.replaceChildren();
 
-    // remove old classes
-    element.classList.remove(...(this._classes ?? []));
+      // remove old classes
+      element.classList.remove(...classes);
 
-    // append a new child node referencing the new icon of the new sprite if they are present.
-    if (icon != null && sprite != null) {
-      const useElement = document.createElementNS(element.namespaceURI, 'use');
+      // append a new child node referencing the new icon of the new sprite if they are present.
+      if (icon != null && sprite != null) {
+        const useElement = document.createElementNS(
+          element.namespaceURI,
+          'use'
+        );
 
-      element.appendChild(useElement);
+        // add classes if classes function was configured
+        if (sprite.classes != null)
+          element.classList.add(...(classes = sprite.classes(icon)));
 
-      element.classList.add(...(this._classes = sprite.classBuilder(icon)));
+        useElement.setAttribute('href', sprite.path(icon));
 
-      useElement.setAttribute('href', sprite.path(icon));
-    }
-  };
+        // crop svg
+        resized(useElement)
+          .pipe(
+            // resize observer will emit after inserting into the DOM => skip first value.
+            //
+            // NOTE: inserting the element before this observation has the same effect since the resize observer will also fire upon observation when the size is not (0, 0).
+            // inline SVGs have a default size of (350, 150).
+            //
+            // https://drafts.csswg.org/resize-observer/#intro
+            skip(1),
+            first()
+          )
+          .subscribe({
+            next: ({ contentRect }) =>
+              element.setAttribute(
+                'viewBox',
+                `0 0 ${contentRect.width} ${contentRect.height}`
+              ),
+          });
+
+        element.appendChild(useElement);
+      }
+    };
+  })();
 }

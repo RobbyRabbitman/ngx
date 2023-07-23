@@ -1,16 +1,59 @@
+import { Injector, inject, runInInjectionContext } from '@angular/core';
 import {
   MockBuilder,
   MockRender,
   MockedComponentFixture,
   ngMocks,
 } from 'ng-mocks';
-import { IconSprite, IconSprites, SvgIcon } from './svg-icon.directive';
+import {
+  MockResizeObserver,
+  setupMockResizeObserver,
+} from '../util/resize-observer.mock.spec';
+import {
+  IconSprite,
+  IconSprites,
+  SvgIcon,
+  provideIconSprites,
+} from './svg-icon.directive';
 
 describe('SvgIcon', () => {
   beforeEach(() => MockBuilder(SvgIcon));
 
+  setupMockResizeObserver();
+
   it('should create an instance', () =>
     expect(MockRender(SvgIcon).point.componentInstance).toBeTruthy());
+
+  it('sprites should be registrable via DI', () => {
+    const sprites = [
+      {
+        name: 'foo',
+        path: (icon) => `path/to/foo/sprite#${icon}`,
+      },
+      {
+        name: 'bar',
+        path: (icon) => `path/to/bar/sprite#${icon}`,
+      },
+    ] as IconSprite[];
+    runInInjectionContext(
+      Injector.create({
+        providers: [
+          {
+            provide: IconSprites,
+            useValue: { register: jest.fn() },
+          },
+          provideIconSprites(...sprites),
+        ],
+      }),
+      () =>
+        sprites.forEach((sprite, i) =>
+          expect(inject(IconSprites).register).toHaveBeenNthCalledWith(
+            i + 1,
+            sprite
+          )
+        )
+    );
+  });
 
   describe('after icon and sprite have been set should', () => {
     let fixture: MockedComponentFixture;
@@ -43,16 +86,13 @@ describe('SvgIcon', () => {
       svg = fixture.point.nativeElement;
 
       ngMocks.get(IconSprites).register({
-        classBuilder: (icon) => ['some-sprite-class', `${icon}-class`],
+        classes: (icon) => ['some-sprite-class', `${icon}-class`],
         name: 'some-sprite',
         path: (icon) => `some/path/${icon}`,
       });
 
       ngMocks.get(IconSprites).register({
-        classBuilder: (icon) => [
-          'some-other-sprite-class',
-          `${icon}-other-class`,
-        ],
+        classes: (icon) => ['some-other-sprite-class', `${icon}-other-class`],
         name: 'some-other-sprite',
         path: (icon) => `some/other/path/${icon}`,
       });
@@ -110,19 +150,31 @@ describe('SvgIcon', () => {
 
   describe('when handling a change', () => {
     let svg: SVGElement;
-    let icon: SvgIcon;
+    let render: (
+      element: SVGElement,
+      icon?: string,
+      sprite?: IconSprite
+    ) => void;
     let sprite: IconSprite;
 
     beforeEach(() => {
       svg = document.createElement('svg') as unknown as SVGElement;
 
       sprite = {
-        classBuilder: (icon) => ['some-sprite-class', `${icon}-class`],
+        classes: (icon) => ['some-sprite-class', `${icon}-class`],
         name: 'some-sprite',
         path: (icon) => `some/path/${icon}`,
       };
 
-      icon = MockRender(SvgIcon).point.componentInstance;
+      render = (
+        MockRender(SvgIcon).point.componentInstance as unknown as {
+          _render: (
+            element: SVGElement,
+            icon?: string,
+            sprite?: IconSprite
+          ) => void;
+        }
+      )._render;
     });
 
     it('should clear the child nodes of the svg', () => {
@@ -132,7 +184,7 @@ describe('SvgIcon', () => {
       expect(svg.childElementCount).toEqual(1);
       expect(svg.firstChild).toBe(div);
 
-      icon._handleChange(svg, undefined, undefined);
+      render(svg, undefined, undefined);
 
       expect(svg.childElementCount).toEqual(0);
     });
@@ -144,7 +196,7 @@ describe('SvgIcon', () => {
         'some-class-which-should-not-be-removed'
       );
 
-      icon._handleChange(svg, 'some-icon', sprite);
+      render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual(
         'some-class-which-should-not-be-removed some-sprite-class some-icon-class'
@@ -152,11 +204,25 @@ describe('SvgIcon', () => {
     });
 
     it('should append a new child node referencing the new icon of the new sprite if they are present', () => {
-      icon._handleChange(svg, 'some-icon', sprite);
+      render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual('some-sprite-class some-icon-class');
 
       expect(svg.innerHTML).toEqual(`<use href="some/path/some-icon"></use>`);
+    });
+
+    it('should crop the svg relative to its viewBox', () => {
+      render(svg, 'some-icon', sprite);
+
+      MockResizeObserver.latest().emit({
+        contentRect: { width: 350, height: 150 } as DOMRectReadOnly,
+      });
+
+      MockResizeObserver.latest().emit({
+        contentRect: { width: 42, height: 42 } as DOMRectReadOnly,
+      });
+
+      expect(svg.getAttribute('viewBox')).toEqual('0 0 42 42');
     });
   });
 });

@@ -24,9 +24,9 @@ jobs:
       - run: npx nx format:check
       - run: npx nx affected -t lint --parallel=3
       - run: npx nx affected -t test --parallel=3 --configuration=ci
-      # TODO modify test target (?) custom test = test + coverage with dependsOn key
       - run: npx nx affected -t coverage-badges --parallel=3
       - run: npx nx affected -t build --parallel=3
+      - run: npx nx affected -t build-storybook --parallel=3 --configuration=ci
       # https://github.com/RobbyRabbitman/ngx/actions/runs/5548590199/jobs/10131779610
       - run: |
           pwd
@@ -35,11 +35,11 @@ jobs:
       - run: npx nx affected -t version --parallel=3
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: git push --follow-tags
-        if: always()
       - run: |
-          chmod +x ./.github/workflows/update-coverage.sh
-          ./.github/workflows/update-coverage.sh
+          chmod +x ./.github/workflows/update-artifacts.sh
+          ./.github/workflows/update-artifacts.sh
         shell: bash
         env:
           TEMP_DIR: ${{ runner.temp }}
+      - run: git push --follow-tags
+        if: always()
