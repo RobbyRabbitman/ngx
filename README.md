@@ -1,1 +1,1 @@
-# NGX Assets
+# NGX Artifacts
