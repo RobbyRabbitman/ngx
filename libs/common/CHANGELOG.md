@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [0.6.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.5.1...common-0.6.0) (2023-07-23)
+
+
+### Features
+
+* storybook ([8959624](https://github.com/RobbyRabbitman/ngx/commit/895962469d22e86b81560bb66600d1e5797d011e))
+
+
+
 ## [0.5.1](https://github.com/RobbyRabbitman/ngx/compare/common-0.5.0...common-0.5.1) (2023-07-14)
 
 
