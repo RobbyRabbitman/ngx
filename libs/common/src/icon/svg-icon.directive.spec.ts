@@ -6,6 +6,10 @@ import {
   ngMocks,
 } from 'ng-mocks';
 import {
+  MockResizeObserver,
+  setupMockResizeObserver,
+} from '../util/resize-observer.mock.spec';
+import {
   IconSprite,
   IconSprites,
   SvgIcon,
@@ -14,6 +18,8 @@ import {
 
 describe('SvgIcon', () => {
   beforeEach(() => MockBuilder(SvgIcon));
+
+  setupMockResizeObserver();
 
   it('should create an instance', () =>
     expect(MockRender(SvgIcon).point.componentInstance).toBeTruthy());
@@ -144,7 +150,11 @@ describe('SvgIcon', () => {
 
   describe('when handling a change', () => {
     let svg: SVGElement;
-    let icon: SvgIcon;
+    let render: (
+      element: SVGElement,
+      icon?: string,
+      sprite?: IconSprite
+    ) => void;
     let sprite: IconSprite;
 
     beforeEach(() => {
@@ -156,7 +166,15 @@ describe('SvgIcon', () => {
         path: (icon) => `some/path/${icon}`,
       };
 
-      icon = MockRender(SvgIcon).point.componentInstance;
+      render = (
+        MockRender(SvgIcon).point.componentInstance as unknown as {
+          _render: (
+            element: SVGElement,
+            icon?: string,
+            sprite?: IconSprite
+          ) => void;
+        }
+      )._render;
     });
 
     it('should clear the child nodes of the svg', () => {
@@ -166,15 +184,7 @@ describe('SvgIcon', () => {
       expect(svg.childElementCount).toEqual(1);
       expect(svg.firstChild).toBe(div);
 
-      (
-        icon as unknown as {
-          _render: (
-            element: SVGElement,
-            icon?: string,
-            sprite?: IconSprite
-          ) => void;
-        }
-      )._render(svg, undefined, undefined);
+      render(svg, undefined, undefined);
 
       expect(svg.childElementCount).toEqual(0);
     });
@@ -186,15 +196,7 @@ describe('SvgIcon', () => {
         'some-class-which-should-not-be-removed'
       );
 
-      (
-        icon as unknown as {
-          _render: (
-            element: SVGElement,
-            icon?: string,
-            sprite?: IconSprite
-          ) => void;
-        }
-      )._render(svg, 'some-icon', sprite);
+      render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual(
         'some-class-which-should-not-be-removed some-sprite-class some-icon-class'
@@ -202,19 +204,25 @@ describe('SvgIcon', () => {
     });
 
     it('should append a new child node referencing the new icon of the new sprite if they are present', () => {
-      (
-        icon as unknown as {
-          _render: (
-            element: SVGElement,
-            icon?: string,
-            sprite?: IconSprite
-          ) => void;
-        }
-      )._render(svg, 'some-icon', sprite);
+      render(svg, 'some-icon', sprite);
 
       expect(svg.classList.value).toEqual('some-sprite-class some-icon-class');
 
       expect(svg.innerHTML).toEqual(`<use href="some/path/some-icon"></use>`);
+    });
+
+    it('should crop the svg relative to its viewBox', () => {
+      render(svg, 'some-icon', sprite);
+
+      MockResizeObserver.latest().emit({
+        contentRect: { width: 350, height: 150 } as DOMRectReadOnly,
+      });
+
+      MockResizeObserver.latest().emit({
+        contentRect: { width: 42, height: 42 } as DOMRectReadOnly,
+      });
+
+      expect(svg.getAttribute('viewBox')).toEqual('0 0 42 42');
     });
   });
 });

@@ -6,49 +6,14 @@ import {
 } from '@angular/core';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
 import { Observable, Subject } from 'rxjs';
+import {
+  MockResizeObserver,
+  setupMockResizeObserver,
+} from './resize-observer.mock.spec';
 import { RESIZED, Resized, provideResized, resized } from './resized';
 
 describe('resized', () => {
-  let originalResizeObserver: typeof ResizeObserver;
-
-  class MockResizeObserver implements ResizeObserver {
-    public static id = -1;
-    public static readonly INSTANCES = new Map<number, MockResizeObserver>();
-
-    public static readonly clear = () => {
-      MockResizeObserver.id = -1;
-      MockResizeObserver.INSTANCES.clear();
-    };
-
-    private targets = [] as Element[];
-
-    public constructor(private callback: ResizeObserverCallback) {
-      MockResizeObserver.INSTANCES.set(++MockResizeObserver.id, this);
-    }
-
-    public disconnect = () => (this.targets = []);
-
-    public observe = (target: Element) => this.targets.push(target);
-
-    public unobserve = (target: Element) =>
-      this.targets.splice(this.targets.indexOf(target), 1);
-
-    public emit = (...entries: Element[]) =>
-      this.callback(
-        entries.map((entry) => ({ target: entry })) as ResizeObserverEntry[],
-        this
-      );
-  }
-
-  beforeAll(() => {
-    originalResizeObserver = global.ResizeObserver;
-    global.ResizeObserver =
-      MockResizeObserver as unknown as typeof ResizeObserver;
-  });
-
-  afterAll(() => (global.ResizeObserver = originalResizeObserver));
-
-  beforeEach(() => MockResizeObserver.clear());
+  setupMockResizeObserver();
 
   it('should be created', () =>
     expect(resized(document.createElement('div'))).toBeInstanceOf(Observable));
@@ -61,13 +26,11 @@ describe('resized', () => {
 
     const subscription = resized(target).subscribe(observer);
 
-    const resizeObserver = MockResizeObserver.INSTANCES.get(
-      MockResizeObserver.id
-    ) as MockResizeObserver;
+    const resizeObserver = MockResizeObserver.latest();
 
-    resizeObserver.emit(target, someOtherElement);
+    resizeObserver.emit({ target }, { target: someOtherElement });
 
-    expect(observer).toHaveBeenCalledWith({ target: target });
+    expect(observer).toHaveBeenCalledWith({ target });
     expect(observer).not.toHaveBeenCalledWith({ target: someOtherElement });
 
     subscription.unsubscribe();
@@ -76,9 +39,7 @@ describe('resized', () => {
   it('should disconnect when the stream completes', () => {
     const subscription = resized(document.createElement('div')).subscribe();
 
-    const resizeObserver = MockResizeObserver.INSTANCES.get(
-      MockResizeObserver.id
-    ) as MockResizeObserver;
+    const resizeObserver = MockResizeObserver.latest();
 
     jest.spyOn(resizeObserver, 'disconnect');
 

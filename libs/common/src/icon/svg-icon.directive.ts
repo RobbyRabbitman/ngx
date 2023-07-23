@@ -154,8 +154,6 @@ export class SvgIcon {
           'use'
         );
 
-        element.appendChild(useElement);
-
         // add classes if classes function was configured
         if (sprite.classes != null)
           element.classList.add(...(classes = sprite.classes(icon)));
@@ -165,18 +163,24 @@ export class SvgIcon {
         // crop svg
         resized(useElement)
           .pipe(
-            // after icon was created => skip first
+            // resize observer will emit after inserting into the DOM => skip first value.
+            //
+            // NOTE: inserting the element before this observation has the same effect since the resize observer will also fire upon observation when the size is not (0, 0).
+            // inline SVGs have a default size of (350, 150).
+            //
+            // https://drafts.csswg.org/resize-observer/#intro
             skip(1),
-            // after icon was rendered => first resize
             first()
           )
           .subscribe({
             next: ({ contentRect }) =>
-              this._element.setAttribute(
+              element.setAttribute(
                 'viewBox',
                 `0 0 ${contentRect.width} ${contentRect.height}`
               ),
           });
+
+        element.appendChild(useElement);
       }
     };
   })();
