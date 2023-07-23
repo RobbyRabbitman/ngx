@@ -35,11 +35,11 @@ jobs:
       - run: npx nx affected -t version --parallel=3
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: git push --follow-tags
+        if: always()
       - run: |
           chmod +x ./.github/workflows/update-artifacts.sh
           ./.github/workflows/update-artifacts.sh
         shell: bash
         env:
           TEMP_DIR: ${{ runner.temp }}
-      - run: git push --follow-tags
-        if: always()
