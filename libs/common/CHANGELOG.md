@@ -2,6 +2,10 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.5.1](https://github.com/RobbyRabbitman/ngx/compare/common-0.5.0...common-0.5.1) (2023-07-14)
+
+
+
 ## [0.4.1](https://github.com/RobbyRabbitman/ngx/compare/common-0.4.0...common-0.4.1) (2023-07-13)
 
 
