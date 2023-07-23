@@ -24,6 +24,7 @@ cp -r ./coverage/ $tmpDir/coverage/
 cp -r ./dist/storybook/ $tmpDir/storybook/
 
 git checkout -B artifacts origin/artifacts
+git pull
 git restore --staged .
 
 cp -Tr $tmpDir/coverage/ coverage/
