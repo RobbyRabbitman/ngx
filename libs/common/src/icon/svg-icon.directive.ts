@@ -4,7 +4,6 @@ import {
   ElementRef,
   Injectable,
   Input,
-  Provider,
   effect,
   inject,
   signal,
@@ -72,7 +71,7 @@ export class IconSprites {
  * @param sprites
  * @returns an environment provider which registers icon sprites.
  */
-export const provideIconSprites = (...sprites: IconSprite[]): Provider => ({
+export const provideIconSprites = (...sprites: IconSprite[]) => ({
   provide: ENVIRONMENT_INITIALIZER,
   multi: true,
   useFactory: () => {
@@ -146,7 +145,7 @@ export class SvgIcon {
       element.replaceChildren();
 
       // remove old classes
-      element.classList.remove(...(classes ?? []));
+      element.classList.remove(...classes);
 
       // append a new child node referencing the new icon of the new sprite if they are present.
       if (icon != null && sprite != null) {

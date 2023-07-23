@@ -1,16 +1,53 @@
+import { Injector, inject, runInInjectionContext } from '@angular/core';
 import {
   MockBuilder,
   MockRender,
   MockedComponentFixture,
   ngMocks,
 } from 'ng-mocks';
-import { IconSprite, IconSprites, SvgIcon } from './svg-icon.directive';
+import {
+  IconSprite,
+  IconSprites,
+  SvgIcon,
+  provideIconSprites,
+} from './svg-icon.directive';
 
 describe('SvgIcon', () => {
   beforeEach(() => MockBuilder(SvgIcon));
 
   it('should create an instance', () =>
     expect(MockRender(SvgIcon).point.componentInstance).toBeTruthy());
+
+  it('sprites should be registrable via DI', () => {
+    const sprites = [
+      {
+        name: 'foo',
+        path: (icon) => `path/to/foo/sprite#${icon}`,
+      },
+      {
+        name: 'bar',
+        path: (icon) => `path/to/bar/sprite#${icon}`,
+      },
+    ] as IconSprite[];
+    runInInjectionContext(
+      Injector.create({
+        providers: [
+          {
+            provide: IconSprites,
+            useValue: { register: jest.fn() },
+          },
+          provideIconSprites(...sprites),
+        ],
+      }),
+      () =>
+        sprites.forEach((sprite, i) =>
+          expect(inject(IconSprites).register).toHaveBeenNthCalledWith(
+            i + 1,
+            sprite
+          )
+        )
+    );
+  });
 
   describe('after icon and sprite have been set should', () => {
     let fixture: MockedComponentFixture;
