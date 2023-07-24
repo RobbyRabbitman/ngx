@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [0.7.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.6.6...common-0.7.0) (2023-07-24)
+
+
+### Features
+
+* **common:** adds for in ([8a31df7](https://github.com/RobbyRabbitman/ngx/commit/8a31df78353abadcfaf22e6c9cb12d05194d4af7))
+
+
+
 ## [0.6.6](https://github.com/RobbyRabbitman/ngx/compare/common-0.6.5...common-0.6.6) (2023-07-23)
 
 
