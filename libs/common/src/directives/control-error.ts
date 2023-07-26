@@ -1,6 +1,7 @@
 import {
   Directive,
   InjectionToken,
+  Injector,
   Input,
   TemplateRef,
   ViewContainerRef,
@@ -9,7 +10,58 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormGroupDirective, NgForm } from '@angular/forms';
+import { ifNonNull } from '../signal';
+import { Arguments } from '../util/ts/arguments';
+
+export const dirty$ = (control: AbstractControl) => {
+  const dirty$ = signal(control.dirty);
+
+  const markAsPristine = control.markAsPristine.bind(control);
+
+  const markAsDirty = control.markAsDirty.bind(control);
+
+  control.markAsPristine = (
+    ...args: Arguments<AbstractControl['markAsPristine']>
+  ) => {
+    markAsPristine(...args);
+    dirty$.set(false);
+  };
+
+  control.markAsDirty = (
+    ...args: Arguments<AbstractControl['markAsDirty']>
+  ) => {
+    markAsDirty(...args);
+    dirty$.set(true);
+  };
+
+  return dirty$;
+};
+
+export const touched$ = (control: AbstractControl) => {
+  const touched$ = signal(control.touched);
+
+  const markAsTouched = control.markAsTouched.bind(control);
+
+  const markAsUntouched = control.markAsUntouched.bind(control);
+
+  control.markAsTouched = (
+    ...args: Arguments<AbstractControl['markAsTouched']>
+  ) => {
+    markAsTouched(...args);
+    touched$.set(true);
+  };
+
+  control.markAsUntouched = (
+    ...args: Arguments<AbstractControl['markAsUntouched']>
+  ) => {
+    markAsUntouched(...args);
+    touched$.set(false);
+  };
+
+  return touched$;
+};
 
 export type StateMatcher = (
   control: AbstractControl,
@@ -26,32 +78,55 @@ export const STATE_MATCHER = new InjectionToken<StateMatcher>(
 
 @Directive({
   selector: '[ngxControlError]',
-  exportAs: 'ngxControlError',
   standalone: true,
 })
 export class ControlError<T> {
   private readonly _templateRef = inject(TemplateRef);
 
+  private readonly _injector = inject(Injector);
+
   private readonly _viewContainerRef = inject(ViewContainerRef);
 
-  public readonly error = signal<undefined | string | string[]>(undefined);
+  public readonly error$ = signal<undefined | string | string[]>(undefined);
 
-  public readonly parent = signal(
+  public readonly parent$ = signal(
     inject(FormGroupDirective, { optional: true }) ??
       inject(NgForm, { optional: true }) ??
       undefined
   );
 
-  public readonly control = signal<AbstractControl<T> | undefined>(undefined);
+  public readonly control$ = signal<AbstractControl<T> | undefined>(undefined);
 
-  public readonly errorStateMatcher = signal(inject(STATE_MATCHER));
+  public readonly touched$ = ifNonNull(touched$)(this.control$);
+
+  public readonly dirty$ = ifNonNull(dirty$)(this.control$);
+
+  public readonly status$ = ifNonNull((control: AbstractControl) =>
+    toSignal(control.statusChanges, {
+      initialValue: control.status,
+      injector: this._injector,
+    })
+  )(this.control$);
+
+  public readonly value$ = ifNonNull((control: AbstractControl) =>
+    toSignal(control.valueChanges, {
+      initialValue: control.value,
+      injector: this._injector,
+    })
+  )(this.control$);
+
+  public readonly errorStateMatcher$ = signal(inject(STATE_MATCHER));
 
   public readonly hasError$ = computed(() => {
-    const error = this.error();
-    const control = this.control();
-    const parent = this.parent();
-    const errorStateMatcher = this.errorStateMatcher();
-    return !!(
+    const error = this.error$();
+    const control = this.control$();
+    const parent = this.parent$();
+    const errorStateMatcher = this.errorStateMatcher$();
+
+    // this computation needs to be also executed when these values change
+    this.touched$(), this.dirty$(), this.value$(), this.status$();
+
+    const hasError = !!(
       error &&
       control &&
       (typeof error === 'string'
@@ -59,28 +134,30 @@ export class ControlError<T> {
         : error.some((x) => control.hasError(x))) &&
       errorStateMatcher(control, parent)
     );
+
+    return hasError;
   });
 
   @Input('ngxControlError')
   public set _error(error: string | string[]) {
-    this.error.set(error);
+    this.error$.set(error);
   }
 
   @Input('ngxControlErrorOf')
   public set _control(control: AbstractControl) {
-    this.control.set(control);
+    this.control$.set(control);
   }
 
   @Input('ngxControlErrorErrorStateMatcher')
   public set _errorStateMatcher(errorStateMatcher: StateMatcher) {
-    this.errorStateMatcher.set(errorStateMatcher);
+    this.errorStateMatcher$.set(errorStateMatcher);
   }
 
   private readonly _render$$ = effect(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const error = this.error()!;
+    const error = this.error$()!;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const control = this.control()!;
+    const control = this.control$()!;
 
     this._viewContainerRef.clear();
 

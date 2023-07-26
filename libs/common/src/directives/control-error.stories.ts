@@ -1,44 +1,85 @@
-import { AbstractControl, FormControl, Validators } from '@angular/forms';
-import { moduleMetadata, type Meta, type StoryObj } from '@storybook/angular';
+import {
+  AbstractControl,
+  FormControl,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import {
+  applicationConfig,
+  moduleMetadata,
+  type Meta,
+  type StoryObj,
+} from '@storybook/angular';
 import { ControlError, StateMatcher } from './control-error';
 
 interface ControlErrorArgs {
   error: string | string[];
+  label: string;
   control: AbstractControl<unknown>;
   errorStateMatcher: StateMatcher;
 }
 
-export default {
+const meta = {
   title: 'Common/Control Error',
   decorators: [
     moduleMetadata({
-      imports: [ControlError],
+      imports: [
+        ControlError,
+        MatFormFieldModule,
+        MatInputModule,
+        ReactiveFormsModule,
+      ],
     }),
+    applicationConfig({ providers: [provideAnimations()] }),
   ],
   render: (args) => ({
     props: args,
-    template: `<div *ngxControlError="error of control as errorMap">{{ error }}: {{ errorMap | json }}</div>`,
+    template: `<mat-form-field>
+    <mat-label>{{ label }}</mat-label>
+    <input matInput [formControl]="control">
+    <mat-error *ngxControlError="error of control as plucked">{{ error }}: {{ plucked | json }}</mat-error>
+  </mat-form-field>`,
   }),
-  argTypes: {
-    errorStateMatcher: { type: 'function', control: 'function' },
+  args: {
+    label: 'some control',
   },
 } satisfies Meta<ControlErrorArgs>;
 
-export const Default = {
+export default meta;
+
+export const Basic = {
   args: {
     error: 'required',
-    control: new FormControl('', Validators.required),
   },
+  render: (args) =>
+    meta.render({ ...args, control: new FormControl('', Validators.required) }),
 } satisfies StoryObj<ControlErrorArgs>;
 
-export const ErrorStateMatcher = {
+export const errorStateMatcher = {
   args: {
     error: 'required',
-    control: new FormControl('', Validators.required),
-    errorStateMatcher: () => true,
   },
   render: (args) => ({
-    props: args,
-    template: `<div *ngxControlError="error of control as errorMap; errorStateMatcher: errorStateMatcher">{{ error }}: {{ errorMap | json }}</div>`,
+    props: {
+      ...args,
+      control: new FormControl('', Validators.required),
+      errorStateMatcher: () => true,
+    },
+    template: `<mat-form-field>
+    <mat-label>{{ label }}</mat-label>
+    <input matInput [formControl]="control">
+    <mat-error *ngxControlError="error of control as plucked; errorStateMatcher: errorStateMatcher">{{ error }}: {{ plucked | json }}</mat-error>
+  </mat-form-field>`,
   }),
+  decorators: [
+    applicationConfig({
+      providers: [
+        { provide: ErrorStateMatcher, useValue: { isErrorState: () => true } },
+      ],
+    }),
+  ],
 } satisfies StoryObj<ControlErrorArgs>;

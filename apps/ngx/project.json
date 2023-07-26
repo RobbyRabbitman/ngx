@@ -45,7 +45,8 @@
         "configDir": "apps/ngx/.storybook",
         "browserTarget": "ngx:build-storybook",
         "compodoc": true,
-        "compodocArgs": ["-e", "json", "-d", "tmp/apps/ngx/.storybook"]
+        "compodocArgs": ["-e", "json", "-d", "tmp/apps/ngx/.storybook"],
+        "styles": ["apps/ngx/.storybook/styles.scss"]
       },
       "configurations": {
         "ci": {
