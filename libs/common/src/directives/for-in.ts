@@ -1,6 +1,6 @@
 import { NgFor } from '@angular/common';
 import { Directive, Input, NgIterable, inject } from '@angular/core';
-import { throwNgxsTestingError } from '../error/common.errors';
+import { throwCommonError } from '../error/common.errors';
 
 export type ForInIterable<T> =
   | NgIterable<T>
@@ -35,7 +35,7 @@ export class ForIn<T> {
       iterable = Object.keys(
         Array.from({ length: ngxForIn.length })
       ) as NgIterable<T>;
-    else throwNgxsTestingError("Can't iterate over {{}}", ngxForIn);
+    else throwCommonError("Can't iterate over {{}}", ngxForIn);
 
     this._ngFor.ngForOf = iterable;
   }
