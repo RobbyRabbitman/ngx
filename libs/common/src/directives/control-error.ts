@@ -3,6 +3,7 @@ import {
   InjectionToken,
   Injector,
   Input,
+  Provider,
   TemplateRef,
   ViewContainerRef,
   computed,
@@ -76,6 +77,9 @@ export const STATE_MATCHER = new InjectionToken<StateMatcher>(
   { factory: () => DEFAULT_STATE_MATCHER }
 );
 
+export const provideStateMatcher = (stateMatcher: StateMatcher) =>
+  ({ provide: STATE_MATCHER, useValue: stateMatcher } satisfies Provider);
+
 @Directive({
   selector: '[ngxControlError]',
   standalone: true,
@@ -117,26 +121,28 @@ export class ControlError<T> {
 
   public readonly errorStateMatcher$ = signal(inject(STATE_MATCHER));
 
-  public readonly hasError$ = computed(() => {
-    const error = this.error$();
-    const control = this.control$();
-    const parent = this.parent$();
-    const errorStateMatcher = this.errorStateMatcher$();
+  public readonly hasError$ = computed(
+    () => {
+      const error = this.error$();
+      const control = this.control$();
+      const parent = this.parent$();
+      const errorStateMatcher = this.errorStateMatcher$();
 
-    // this computation needs to be also executed when these values change
-    this.touched$(), this.dirty$(), this.value$(), this.status$();
+      this.touched$(), this.dirty$(), this.value$(), this.status$();
 
-    const hasError = !!(
-      error &&
-      control &&
-      (typeof error === 'string'
-        ? control.hasError(error)
-        : error.some((x) => control.hasError(x))) &&
-      errorStateMatcher(control, parent)
-    );
+      const hasError = !!(
+        error &&
+        control &&
+        (typeof error === 'string'
+          ? control.hasError(error)
+          : error.some((x) => control.hasError(x))) &&
+        errorStateMatcher(control, parent)
+      );
 
-    return hasError;
-  });
+      return hasError;
+    },
+    { equal: () => false }
+  );
 
   @Input('ngxControlError')
   public set _error(error: string | string[]) {
@@ -154,14 +160,13 @@ export class ControlError<T> {
   }
 
   private readonly _render$$ = effect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const error = this.error$()!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const control = this.control$()!;
+    const error = this.error$();
+    const control = this.control$();
+    const hasError = this.hasError$();
 
     this._viewContainerRef.clear();
 
-    if (this.hasError$())
+    if (hasError && control != null && error != null)
       this._viewContainerRef.createEmbeddedView(this._templateRef, {
         $implicit:
           typeof error === 'string'

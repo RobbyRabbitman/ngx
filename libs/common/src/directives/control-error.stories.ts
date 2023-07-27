@@ -1,6 +1,7 @@
 import {
   AbstractControl,
   FormControl,
+  FormGroupDirective,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -14,7 +15,11 @@ import {
   type Meta,
   type StoryObj,
 } from '@storybook/angular';
-import { ControlError, StateMatcher } from './control-error';
+import {
+  ControlError,
+  StateMatcher,
+  provideStateMatcher,
+} from './control-error';
 
 interface ControlErrorArgs {
   error: string | string[];
@@ -41,7 +46,7 @@ const meta = {
     template: `<mat-form-field>
     <mat-label>{{ label }}</mat-label>
     <input matInput [formControl]="control">
-    <mat-error *ngxControlError="error of control as plucked">{{ error }}: {{ plucked | json }}</mat-error>
+    <mat-error *ngxControlError="error of control as plucked">{{ plucked | json }}</mat-error>
   </mat-form-field>`,
   }),
   args: {
@@ -54,31 +59,47 @@ export default meta;
 export const Basic = {
   args: {
     error: 'required',
+    control: new FormControl('', Validators.required),
   },
-  render: (args) =>
-    meta.render({ ...args, control: new FormControl('', Validators.required) }),
 } satisfies StoryObj<ControlErrorArgs>;
 
-export const errorStateMatcher = {
+export const Multiple = {
   args: {
-    error: 'required',
+    error: ['required', 'minlength'],
+    control: new FormControl('', [
+      Validators.required,
+      Validators.minLength(5),
+    ]),
   },
-  render: (args) => ({
-    props: {
-      ...args,
-      control: new FormControl('', Validators.required),
-      errorStateMatcher: () => true,
-    },
-    template: `<mat-form-field>
-    <mat-label>{{ label }}</mat-label>
-    <input matInput [formControl]="control">
-    <mat-error *ngxControlError="error of control as plucked; errorStateMatcher: errorStateMatcher">{{ error }}: {{ plucked | json }}</mat-error>
-  </mat-form-field>`,
-  }),
+} satisfies StoryObj<ControlErrorArgs>;
+
+export const ShowErrorOnDirtyOrTouched = {
+  args: {
+    error: ['required', 'minlength'],
+    control: new FormControl('', [
+      Validators.required,
+      Validators.minLength(5),
+    ]),
+  },
   decorators: [
     applicationConfig({
       providers: [
-        { provide: ErrorStateMatcher, useValue: { isErrorState: () => true } },
+        {
+          provide: ErrorStateMatcher,
+          useValue: {
+            isErrorState: (
+              control: AbstractControl,
+              parent?: FormGroupDirective
+            ) =>
+              control.invalid &&
+              (control.dirty || control.touched || !!parent?.submitted),
+          },
+        },
+        provideStateMatcher(
+          (control, parent) =>
+            control.invalid &&
+            (control.dirty || control.touched || !!parent?.submitted)
+        ),
       ],
     }),
   ],
