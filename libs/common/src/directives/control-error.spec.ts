@@ -22,7 +22,7 @@ describe('ControlError', () => {
     };
 
     const fixture = MockRender(
-      `<span *ngxControlError="error of control as error; errorStateMatcher: stateMatcher; let implicit">42</span>`,
+      `<span *ngxControlError="let errors of control; track: error; errorStateMatcher: stateMatcher; let implicit">42</span>`,
       // NG100 ...
       // `<span *ngxControlError="error of control as error; errorStateMatcher: stateMatcher; let implicit">{{ error }} {{ implicit }}</span>`,
       params
@@ -50,7 +50,7 @@ describe('ControlError', () => {
       const fixture = MockRender(`<ng-template ngxControlError></ng-template>`);
       const controlError = findInstance();
 
-      controlError.error$.set('required');
+      controlError.track$.set('required');
       controlError.control$.set(new FormControl('', Validators.required));
       controlError.errorStateMatcher$.set(() => true);
 
@@ -58,7 +58,7 @@ describe('ControlError', () => {
 
       expect(controlError.hasError$()).toBe(true);
 
-      controlError.error$.set('otherError');
+      controlError.track$.set('otherError');
 
       fixture.detectChanges();
 
@@ -69,7 +69,7 @@ describe('ControlError', () => {
       const fixture = MockRender(`<ng-template ngxControlError></ng-template>`);
       const controlError = findInstance();
 
-      controlError.error$.set('required');
+      controlError.track$.set('required');
       controlError.control$.set(new FormControl('', Validators.required));
       controlError.errorStateMatcher$.set(() => true);
 
@@ -88,7 +88,7 @@ describe('ControlError', () => {
       const fixture = MockRender(`<ng-template ngxControlError></ng-template>`);
       const controlError = findInstance();
 
-      controlError.error$.set('required');
+      controlError.track$.set('required');
       controlError.control$.set(new FormControl('', Validators.required));
       controlError.errorStateMatcher$.set(() => true);
 
@@ -110,7 +110,7 @@ describe('ControlError', () => {
         );
         const controlError = findInstance();
 
-        controlError.error$.set('required');
+        controlError.track$.set('required');
         controlError.control$.set(new FormControl('', Validators.required));
         controlError.errorStateMatcher$.set((control) => control.touched);
 
@@ -137,7 +137,7 @@ describe('ControlError', () => {
         );
         const controlError = findInstance();
 
-        controlError.error$.set('required');
+        controlError.track$.set('required');
         controlError.control$.set(new FormControl('', Validators.required));
         controlError.errorStateMatcher$.set((control) => control.dirty);
 
@@ -164,7 +164,7 @@ describe('ControlError', () => {
         );
         const controlError = findInstance();
 
-        controlError.error$.set('minlength');
+        controlError.track$.set('minlength');
         controlError.control$.set(
           new FormControl('1', [
             Validators.minLength(3),
@@ -198,7 +198,7 @@ describe('ControlError', () => {
         );
         const controlError = findInstance();
 
-        controlError.error$.set('required');
+        controlError.track$.set('required');
         controlError.control$.set(new FormControl(''));
         controlError.errorStateMatcher$.set((control) => control.invalid);
 
@@ -220,7 +220,7 @@ describe('ControlError', () => {
         );
         const controlError = findInstance();
 
-        controlError.error$.set('required');
+        controlError.track$.set('required');
         controlError.control$.set(new FormControl('', Validators.required));
         controlError.errorStateMatcher$.set((control) => control.invalid);
 
@@ -243,7 +243,7 @@ describe('ControlError', () => {
           );
           const controlError = findInstance();
 
-          controlError.error$.set('required');
+          controlError.track$.set('required');
           controlError.control$.set(new FormControl('', Validators.required));
           controlError.errorStateMatcher$.set((control) => control.invalid);
 
@@ -270,7 +270,7 @@ describe('ControlError', () => {
           );
           const controlError = findInstance();
 
-          controlError.error$.set('required');
+          controlError.track$.set('required');
           controlError.control$.set(new FormControl('', Validators.required));
           controlError.errorStateMatcher$.set((control) => control.disabled);
 
@@ -300,7 +300,7 @@ describe('ControlError', () => {
           );
           const controlError = findInstance();
 
-          controlError.error$.set('required');
+          controlError.track$.set('required');
           controlError.control$.set(
             new FormControl('', undefined, (control) =>
               of(Validators.required(control)).pipe(delay(500))

@@ -47,7 +47,7 @@ const meta = {
     template: `<mat-form-field>
     <mat-label>{{ label }}</mat-label>
     <input matInput [formControl]="control">
-    <mat-error *ngxControlError="error of control as plucked">{{ plucked | json }}</mat-error>
+    <mat-error *ngxControlError="let errors of control; track: error">{{ errors | json }}</mat-error>
     </mat-form-field>`,
   }),
   args: {

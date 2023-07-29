@@ -2,7 +2,6 @@ import {
   Directive,
   EmbeddedViewRef,
   InjectionToken,
-  Injector,
   Input,
   Provider,
   TemplateRef,
@@ -94,20 +93,19 @@ export interface ControlErrorContext {
   $implicit: any | ValidationErrors;
   ngxControlErrorOf: any | ValidationErrors;
   errors: ValidationErrors;
+  track: string | string[];
 }
 
 @Directive({
   selector: '[ngxControlError]',
   standalone: true,
 })
-export class ControlError<T> {
+export class ControlError {
   private readonly _templateRef = inject(TemplateRef);
-
-  private readonly _injector = inject(Injector);
 
   private readonly _viewContainerRef = inject(ViewContainerRef);
 
-  public readonly error$ = signal<undefined | string | string[]>(undefined);
+  public readonly track$ = signal<undefined | string | string[]>(undefined);
 
   public readonly parent$ = signal(
     inject(FormGroupDirective, { optional: true }) ??
@@ -115,7 +113,7 @@ export class ControlError<T> {
       undefined
   );
 
-  public readonly control$ = signal<AbstractControl<T> | undefined>(undefined);
+  public readonly control$ = signal<AbstractControl | undefined>(undefined);
 
   public readonly touched$ = ifNonNull(touched$)(this.control$);
 
@@ -137,24 +135,24 @@ export class ControlError<T> {
 
   public readonly hasError$ = computed(() => this._hasError$());
 
-  @Input('ngxControlError')
-  public set _error(error: string | string[]) {
-    this.error$.set(error);
+  @Input({ alias: 'ngxControlErrorTrack', required: true })
+  public set _track(track: string | string[]) {
+    this.track$.set(track);
   }
 
-  @Input('ngxControlErrorOf')
+  @Input({ alias: 'ngxControlErrorOf', required: true })
   public set _control(control: AbstractControl) {
     this.control$.set(control);
   }
 
-  @Input('ngxControlErrorErrorStateMatcher')
+  @Input({ alias: 'ngxControlErrorErrorStateMatcher' })
   public set _errorStateMatcher(errorStateMatcher: StateMatcher) {
     this.errorStateMatcher$.set(errorStateMatcher);
   }
 
   private readonly _hasError$ = computed(
     () => {
-      const error = this.error$();
+      const track = this.track$();
       const control = this.control$();
       const parent = this.parent$();
       const errorStateMatcher = this.errorStateMatcher$();
@@ -162,11 +160,11 @@ export class ControlError<T> {
       this.touched$(), this.dirty$(), this.value$(), this.status$();
 
       const hasError = !!(
-        error &&
+        track &&
         control &&
-        (typeof error === 'string'
-          ? control.hasError(error)
-          : error.some((x) => control.hasError(x))) &&
+        (typeof track === 'string'
+          ? control.hasError(track)
+          : track.some((x) => control.hasError(x))) &&
         errorStateMatcher(control, parent)
       );
 
@@ -182,18 +180,18 @@ export class ControlError<T> {
   }
 
   private readonly _render$$ = effect(() => {
-    const error = this.error$();
+    const track = this.track$();
     const control = this.control$();
     const hasError = this._hasError$();
 
     this._viewContainerRef.clear();
 
-    if (hasError && control != null && error != null)
+    if (hasError && control != null && track != null)
       this._viewContainerRef.createEmbeddedView(this._templateRef, {
         $implicit:
-          typeof error === 'string'
-            ? control.getError(error)
-            : error
+          typeof track === 'string'
+            ? control.getError(track)
+            : track
                 .filter((x) => control.hasError(x))
                 .reduce(
                   (errors, x) => ({
@@ -205,9 +203,15 @@ export class ControlError<T> {
         get ngxControlErrorOf() {
           return this.$implicit;
         },
+        track,
         get errors() {
           return control.errors ?? {};
         },
       } satisfies ControlErrorContext);
   });
+
+  public static ngTemplateContextGuard = (
+    directive: ControlError,
+    context: unknown
+  ): context is ControlErrorContext => true;
 }
