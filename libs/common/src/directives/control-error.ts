@@ -1,5 +1,6 @@
 import {
   Directive,
+  EmbeddedViewRef,
   InjectionToken,
   Injector,
   Input,
@@ -11,8 +12,14 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormGroupDirective, NgForm } from '@angular/forms';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import {
+  AbstractControl,
+  FormGroupDirective,
+  NgForm,
+  ValidationErrors,
+} from '@angular/forms';
+import { EMPTY, switchMap } from 'rxjs';
 import { ifNonNull } from '../signal';
 import { Arguments } from '../util/ts/arguments';
 
@@ -69,16 +76,25 @@ export type StateMatcher = (
   parent?: FormGroupDirective | NgForm
 ) => boolean;
 
-export const DEFAULT_STATE_MATCHER: StateMatcher = (control, parent) =>
+export const DEFAULT_ERROR_STATE_MATCHER: StateMatcher = (control, parent) =>
   control.invalid && (control.touched || !!parent?.submitted);
 
-export const STATE_MATCHER = new InjectionToken<StateMatcher>(
+export const ERROR_STATE_MATCHER = new InjectionToken<StateMatcher>(
   'NGX State Matcher',
-  { factory: () => DEFAULT_STATE_MATCHER }
+  { factory: () => DEFAULT_ERROR_STATE_MATCHER }
 );
 
-export const provideStateMatcher = (stateMatcher: StateMatcher) =>
-  ({ provide: STATE_MATCHER, useValue: stateMatcher } satisfies Provider);
+export const provideErrorStateMatcher = (errorStateMatcher: StateMatcher) =>
+  ({
+    provide: ERROR_STATE_MATCHER,
+    useValue: errorStateMatcher,
+  } satisfies Provider);
+
+export interface ControlErrorContext {
+  $implicit: any | ValidationErrors;
+  ngxControlErrorOf: any | ValidationErrors;
+  errors: ValidationErrors;
+}
 
 @Directive({
   selector: '[ngxControlError]',
@@ -105,23 +121,38 @@ export class ControlError<T> {
 
   public readonly dirty$ = ifNonNull(dirty$)(this.control$);
 
-  public readonly status$ = ifNonNull((control: AbstractControl) =>
-    toSignal(control.statusChanges, {
-      initialValue: control.status,
-      injector: this._injector,
-    })
-  )(this.control$);
+  public readonly status$ = toSignal(
+    toObservable(this.control$).pipe(
+      switchMap((control) => control?.statusChanges ?? EMPTY)
+    )
+  );
 
-  public readonly value$ = ifNonNull((control: AbstractControl) =>
-    toSignal(control.valueChanges, {
-      initialValue: control.value,
-      injector: this._injector,
-    })
-  )(this.control$);
+  public readonly value$ = toSignal(
+    toObservable(this.control$).pipe(
+      switchMap((control) => control?.valueChanges ?? EMPTY)
+    )
+  );
 
-  public readonly errorStateMatcher$ = signal(inject(STATE_MATCHER));
+  public readonly errorStateMatcher$ = signal(inject(ERROR_STATE_MATCHER));
 
-  public readonly hasError$ = computed(
+  public readonly hasError$ = computed(() => this._hasError$());
+
+  @Input('ngxControlError')
+  public set _error(error: string | string[]) {
+    this.error$.set(error);
+  }
+
+  @Input('ngxControlErrorOf')
+  public set _control(control: AbstractControl) {
+    this.control$.set(control);
+  }
+
+  @Input('ngxControlErrorErrorStateMatcher')
+  public set _errorStateMatcher(errorStateMatcher: StateMatcher) {
+    this.errorStateMatcher$.set(errorStateMatcher);
+  }
+
+  private readonly _hasError$ = computed(
     () => {
       const error = this.error$();
       const control = this.control$();
@@ -144,25 +175,16 @@ export class ControlError<T> {
     { equal: () => false }
   );
 
-  @Input('ngxControlError')
-  public set _error(error: string | string[]) {
-    this.error$.set(error);
-  }
-
-  @Input('ngxControlErrorOf')
-  public set _control(control: AbstractControl) {
-    this.control$.set(control);
-  }
-
-  @Input('ngxControlErrorErrorStateMatcher')
-  public set _errorStateMatcher(errorStateMatcher: StateMatcher) {
-    this.errorStateMatcher$.set(errorStateMatcher);
+  public get context() {
+    return (
+      this._viewContainerRef.get(0) as EmbeddedViewRef<ControlErrorContext>
+    )?.context;
   }
 
   private readonly _render$$ = effect(() => {
     const error = this.error$();
     const control = this.control$();
-    const hasError = this.hasError$();
+    const hasError = this._hasError$();
 
     this._viewContainerRef.clear();
 
@@ -183,6 +205,9 @@ export class ControlError<T> {
         get ngxControlErrorOf() {
           return this.$implicit;
         },
-      });
+        get errors() {
+          return control.errors ?? {};
+        },
+      } satisfies ControlErrorContext);
   });
 }

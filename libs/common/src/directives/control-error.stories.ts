@@ -15,10 +15,11 @@ import {
   type Meta,
   type StoryObj,
 } from '@storybook/angular';
+import { delay, of } from 'rxjs';
 import {
   ControlError,
   StateMatcher,
-  provideStateMatcher,
+  provideErrorStateMatcher,
 } from './control-error';
 
 interface ControlErrorArgs {
@@ -47,10 +48,17 @@ const meta = {
     <mat-label>{{ label }}</mat-label>
     <input matInput [formControl]="control">
     <mat-error *ngxControlError="error of control as plucked">{{ plucked | json }}</mat-error>
-  </mat-form-field>`,
+    </mat-form-field>`,
   }),
   args: {
     label: 'some control',
+  },
+  argTypes: {
+    control: {
+      table: {
+        disable: true,
+      },
+    },
   },
 } satisfies Meta<ControlErrorArgs>;
 
@@ -60,6 +68,16 @@ export const Basic = {
   args: {
     error: 'required',
     control: new FormControl('', Validators.required),
+  },
+} satisfies StoryObj<ControlErrorArgs>;
+
+export const AsyncValidator = {
+  args: {
+    error: ['required', 'minlength'],
+    control: new FormControl('', undefined, [
+      (control) => of(Validators.required(control)).pipe(delay(1000)),
+      (control) => of(Validators.minLength(5)(control)).pipe(delay(2000)),
+    ]),
   },
 } satisfies StoryObj<ControlErrorArgs>;
 
@@ -95,7 +113,7 @@ export const ShowErrorOnDirtyOrTouched = {
               (control.dirty || control.touched || !!parent?.submitted),
           },
         },
-        provideStateMatcher(
+        provideErrorStateMatcher(
           (control, parent) =>
             control.invalid &&
             (control.dirty || control.touched || !!parent?.submitted)
