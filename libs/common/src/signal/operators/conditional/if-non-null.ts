@@ -21,6 +21,11 @@ export function ifNonNull<T, R, F>(
 export function ifNonNull<T, R, F>(
   thenBranch: UnaryFunction<NonNullable<T>, SignalOrValue<R>>,
   elseBranch?: SignalOrRegularFn<F>
+): OperatorFunction<T | null | undefined, R | F | undefined>;
+
+export function ifNonNull<T, R, F>(
+  thenBranch: UnaryFunction<NonNullable<T>, SignalOrValue<R>>,
+  elseBranch?: SignalOrRegularFn<F>
 ): OperatorFunction<T | null | undefined, R | F | undefined> {
   return (source) =>
     iif(
