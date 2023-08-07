@@ -20,7 +20,6 @@ import {
 } from '@angular/forms';
 import { EMPTY, switchMap } from 'rxjs';
 import { ifNonNull } from '../signal';
-import { Arguments } from '../util';
 
 export const dirty$ = (control: AbstractControl) => {
   const dirty$ = signal(control.dirty);
@@ -30,14 +29,14 @@ export const dirty$ = (control: AbstractControl) => {
   const markAsDirty = control.markAsDirty.bind(control);
 
   control.markAsPristine = (
-    ...args: Arguments<AbstractControl['markAsPristine']>
+    ...args: Parameters<AbstractControl['markAsPristine']>
   ) => {
     markAsPristine(...args);
     dirty$.set(false);
   };
 
   control.markAsDirty = (
-    ...args: Arguments<AbstractControl['markAsDirty']>
+    ...args: Parameters<AbstractControl['markAsDirty']>
   ) => {
     markAsDirty(...args);
     dirty$.set(true);
@@ -54,14 +53,14 @@ export const touched$ = (control: AbstractControl) => {
   const markAsUntouched = control.markAsUntouched.bind(control);
 
   control.markAsTouched = (
-    ...args: Arguments<AbstractControl['markAsTouched']>
+    ...args: Parameters<AbstractControl['markAsTouched']>
   ) => {
     markAsTouched(...args);
     touched$.set(true);
   };
 
   control.markAsUntouched = (
-    ...args: Arguments<AbstractControl['markAsUntouched']>
+    ...args: Parameters<AbstractControl['markAsUntouched']>
   ) => {
     markAsUntouched(...args);
     touched$.set(false);
