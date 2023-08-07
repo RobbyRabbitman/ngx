@@ -1,8 +1,17 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { FormControl, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  NgForm,
+  Validators,
+} from '@angular/forms';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
 import { delay, of } from 'rxjs';
-import { ControlError, provideErrorStateMatcher } from './control-error';
+import {
+  ControlError,
+  DEFAULT_ERROR_STATE_MATCHER,
+  provideErrorStateMatcher,
+} from './control-error';
 
 describe('ControlError', () => {
   beforeEach(() => MockBuilder(ControlError));
@@ -12,6 +21,11 @@ describe('ControlError', () => {
   it('should create an instance', () => {
     MockRender(`<ng-template ngxControlError></ng-template>`);
     expect(findInstance()).toBeTruthy();
+  });
+
+  it('should have a context guard', () => {
+    MockRender(`<ng-template ngxControlError></ng-template>`);
+    expect(ControlError.ngTemplateContextGuard(findInstance(), {})).toBe(true);
   });
 
   it('should support micro syntax', () => {
@@ -32,7 +46,7 @@ describe('ControlError', () => {
 
     expect(findInstance().context.$implicit).toEqual(true);
     expect(findInstance().context.ngxControlErrorOf).toEqual(true);
-    expect(findInstance().context.errors).toEqual({ required: true });
+    expect(findInstance().context.control).toEqual(params.control);
   });
 
   it('should have an injectable error state matcher', () => {
@@ -45,7 +59,15 @@ describe('ControlError', () => {
     expect(findInstance().errorStateMatcher$()).toBe(errorStateMatcher);
   });
 
-  describe('should has an error when the control has the specified error and the control is in an error state based on the error state matcher', () => {
+  it('should use the default error state matcher as default', () => {
+    MockRender(`<ng-template ngxControlError></ng-template>`);
+
+    expect(findInstance().errorStateMatcher$()).toBe(
+      DEFAULT_ERROR_STATE_MATCHER
+    );
+  });
+
+  describe('should have an error when the control has the specified error and the control is in an error state based on the error state matcher', () => {
     it('respecting error changes', () => {
       const fixture = MockRender(`<ng-template ngxControlError></ng-template>`);
       const controlError = findInstance();
@@ -63,6 +85,21 @@ describe('ControlError', () => {
       fixture.detectChanges();
 
       expect(controlError.hasError$()).toBe(false);
+    });
+
+    it('when it has at least 1 tracked error ', () => {
+      const fixture = MockRender(`<ng-template ngxControlError></ng-template>`);
+      const controlError = findInstance();
+
+      controlError.track$.set(['minlength', 'email']);
+      controlError.control$.set(
+        new FormControl('42', [Validators.minLength(3), Validators.email])
+      );
+      controlError.errorStateMatcher$.set(() => true);
+
+      fixture.detectChanges();
+
+      expect(controlError.hasError$()).toBe(true);
     });
 
     it('respecting error state matcher changes', () => {
@@ -322,5 +359,148 @@ describe('ControlError', () => {
         }));
       });
     });
+  });
+  it('should render when it has an error', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+
+    controlError.track$.set('required');
+    controlError.control$.set(new FormControl('', Validators.required));
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(ngMocks.formatText(fixture)).toBe('42');
+
+    controlError.errorStateMatcher$.set(() => false);
+
+    fixture.detectChanges();
+
+    expect(ngMocks.formatText(fixture)).toBe('');
+  });
+
+  it('should reference the tracked error value in its context', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+
+    controlError.track$.set('required');
+    controlError.control$.set(new FormControl('', Validators.required));
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(findInstance().context.$implicit).toBe(
+      findInstance().context.ngxControlErrorOf
+    );
+    expect(findInstance().context.$implicit).toBe(true);
+  });
+
+  it('should reference the control in its context', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+    const control = new FormControl('', Validators.required);
+
+    controlError.track$.set('required');
+    controlError.control$.set(control);
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(findInstance().context.control).toBe(control);
+  });
+
+  it('should reference the tracked error in its context', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+
+    controlError.track$.set('required');
+    controlError.control$.set(new FormControl('', Validators.required));
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(findInstance().context.track).toBe('required');
+  });
+
+  it('should reference the tracked errors in its context', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+
+    controlError.track$.set(['minlength', 'email']);
+    controlError.control$.set(
+      new FormControl('42', [Validators.minLength(3), Validators.email])
+    );
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(findInstance().context.track).toEqual(['minlength', 'email']);
+  });
+
+  it('should reference the tracked error values in its context', () => {
+    const fixture = MockRender(`<ng-template ngxControlError>42</ng-template>`);
+    const controlError = findInstance();
+
+    controlError.track$.set(['minlength', 'email']);
+    controlError.control$.set(
+      new FormControl('42', [Validators.minLength(3), Validators.email])
+    );
+    controlError.errorStateMatcher$.set(() => true);
+
+    fixture.detectChanges();
+
+    expect(findInstance().context.$implicit).toBe(
+      findInstance().context.ngxControlErrorOf
+    );
+    expect(findInstance().context.$implicit).toEqual({
+      email: true,
+      minlength: { actualLength: 2, requiredLength: 3 },
+    });
+  });
+});
+
+describe('DEFAULT_ERROR_STATE_MATCHER', () => {
+  it('should return true if the control is invalid and it has been touched or the parent has been submitted', () => {
+    const withOutParent = (
+      invalid: boolean,
+      touched: boolean,
+      expected: boolean
+    ) =>
+      expect(
+        DEFAULT_ERROR_STATE_MATCHER({
+          invalid,
+          touched,
+        } as AbstractControl)
+      ).toBe(expected);
+
+    withOutParent(true, true, true);
+    withOutParent(true, false, false);
+    withOutParent(false, true, false);
+    withOutParent(false, false, false);
+
+    const withParent = (
+      invalid: boolean,
+      touched: boolean,
+      submitted: boolean,
+      expected: boolean
+    ) =>
+      expect(
+        DEFAULT_ERROR_STATE_MATCHER(
+          {
+            invalid,
+            touched,
+          } as AbstractControl,
+          { submitted } as NgForm
+        )
+      ).toBe(expected);
+
+    withParent(true, true, true, true);
+    withParent(true, true, false, true);
+    withParent(true, false, true, true);
+    withParent(true, false, false, false);
+    withParent(false, true, true, false);
+    withParent(false, true, false, false);
+    withParent(false, false, true, false);
+    withParent(false, false, false, false);
   });
 });

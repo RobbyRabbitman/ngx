@@ -92,7 +92,7 @@ export const provideErrorStateMatcher = (errorStateMatcher: StateMatcher) =>
 export interface ControlErrorContext {
   $implicit: any | ValidationErrors;
   ngxControlErrorOf: any | ValidationErrors;
-  errors: ValidationErrors;
+  control: AbstractControl;
   track: string | string[];
 }
 
@@ -204,9 +204,7 @@ export class ControlError {
           return this.$implicit;
         },
         track,
-        get errors() {
-          return control.errors ?? {};
-        },
+        control,
       } satisfies ControlErrorContext);
   });
 
