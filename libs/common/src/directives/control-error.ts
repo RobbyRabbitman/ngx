@@ -20,7 +20,7 @@ import {
 } from '@angular/forms';
 import { EMPTY, switchMap } from 'rxjs';
 import { ifNonNull } from '../signal';
-import { Arguments } from '../util/ts/arguments';
+import { Arguments } from '../util';
 
 export const dirty$ = (control: AbstractControl) => {
   const dirty$ = signal(control.dirty);
