@@ -2,6 +2,10 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.5.3](https://github.com/RobbyRabbitman/ngx/compare/ngxs-testing-0.5.2...ngxs-testing-0.5.3) (2023-09-03)
+
+
+
 ## [0.5.2](https://github.com/RobbyRabbitman/ngx/compare/ngxs-testing-0.5.1...ngxs-testing-0.5.2) (2023-07-14)
 
 
