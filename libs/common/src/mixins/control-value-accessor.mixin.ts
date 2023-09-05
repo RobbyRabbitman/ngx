@@ -159,7 +159,8 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
         this._distinctValueChange$().value
       ) &&
       // update model
-      this._onChange$()(this._distinctValueChange$().value)
+      this._onChange$()(this._distinctValueChange$().value),
+    { allowSignalWrites: true }
   );
 
   /**
@@ -172,7 +173,8 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   private readonly _disabledViewToModel$$ = effect(
     () =>
       this.ngControl?.control &&
-      this.ngControl.control[this.disabled$() ? 'disable' : 'enable']()
+      this.ngControl.control[this.disabled$() ? 'disable' : 'enable'](),
+    { allowSignalWrites: true }
   );
 
   /**
