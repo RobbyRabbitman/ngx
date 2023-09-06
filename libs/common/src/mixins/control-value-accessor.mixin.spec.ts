@@ -198,6 +198,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       fixture.detectChanges();
 
       expect(mixin().value$()).toBe(true);
+      expect(mixin().value).toBe(true);
       expect(checkbox().checked).toBe(true);
 
       checkbox().click();
@@ -247,6 +248,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
       });
 
       expect(mixin().value$()).toBe(42);
+      expect(mixin().value).toBe(42);
     });
 
     it('should register itself as the value accessor', () => {
