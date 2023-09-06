@@ -186,6 +186,13 @@ export class MixinControlValueAccessor<T> implements ControlValueAccessor {
   }
 
   /**
+   * Gets this value.
+   */
+  public get value() {
+    return this.value$();
+  }
+
+  /**
    * Sets this disabled state.
    */
   @Input()
