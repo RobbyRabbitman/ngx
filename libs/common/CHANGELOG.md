@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [0.8.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.7.2...common-0.8.0) (2023-09-06)
+
+
+### Features
+
+* **common:** adds a getter for the value ([#13](https://github.com/RobbyRabbitman/ngx/issues/13)) ([e66b24c](https://github.com/RobbyRabbitman/ngx/commit/e66b24cfb50b3f7064f5f596e67d94d86028c2ee))
+
+
+
 ## [0.7.2](https://github.com/RobbyRabbitman/ngx/compare/common-0.7.1...common-0.7.2) (2023-09-05)
 
 
