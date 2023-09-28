@@ -28,11 +28,9 @@ jobs:
       - run: npx nx affected -t build --parallel=3
       - run: npx nx affected -t build-storybook --parallel=3 --configuration=ci
       # https://github.com/RobbyRabbitman/ngx/actions/runs/5548590199/jobs/10131779610
-      - run: |
-          pwd
-          [ -f ".git/index.lock" ] || echo "why does it exists..."
-          rm -f .git/index.lock
-      - run: npx nx affected -t version --parallel=3
+      # https://github.com/jscutlery/semver/issues/507
+      # the version command fails in combination with affected and parallel > 1
+      - run: npx nx affected -t version --parallel=1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --follow-tags
