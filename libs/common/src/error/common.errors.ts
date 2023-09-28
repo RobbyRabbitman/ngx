@@ -11,7 +11,7 @@ export const buildCommonErrorMessage = <M extends keyof typeof COMMON_ERRORS>(
     String(message)
   )}`;
 
-export const throwNgxsTestingError = <M extends keyof typeof COMMON_ERRORS>(
+export const throwCommonError = <M extends keyof typeof COMMON_ERRORS>(
   message: M,
   ...parameters: Parameters<(typeof COMMON_ERRORS)[M]>
 ) => {
