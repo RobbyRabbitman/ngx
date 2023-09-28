@@ -2,6 +2,28 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [0.8.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.7.2...common-0.8.0) (2023-09-06)
+
+
+### Features
+
+* **common:** adds a getter for the value ([#13](https://github.com/RobbyRabbitman/ngx/issues/13)) ([e66b24c](https://github.com/RobbyRabbitman/ngx/commit/e66b24cfb50b3f7064f5f596e67d94d86028c2ee))
+
+
+
+## [0.7.2](https://github.com/RobbyRabbitman/ngx/compare/common-0.7.1...common-0.7.2) (2023-09-05)
+
+
+### Bug Fixes
+
+* **common:** cva allow signal writes ([#12](https://github.com/RobbyRabbitman/ngx/issues/12)) ([558fb0f](https://github.com/RobbyRabbitman/ngx/commit/558fb0f5f36168c395ab8ae05b8c30e1511975b6))
+
+
+
+## [0.7.1](https://github.com/RobbyRabbitman/ngx/compare/common-0.7.0...common-0.7.1) (2023-09-03)
+
+
+
 # [0.7.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.6.6...common-0.7.0) (2023-07-24)
 
 
