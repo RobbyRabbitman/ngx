@@ -22,15 +22,15 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       - run: npm ci
       - run: npx nx format:check
-      - run: npx nx affected -t lint --parallel=3
-      - run: npx nx affected -t test --parallel=3 --configuration=ci
-      - run: npx nx affected -t coverage-badges --parallel=3
-      - run: npx nx affected -t build --parallel=3
-      - run: npx nx affected -t build-storybook --parallel=3 --configuration=ci
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t lint --parallel=3
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t test --parallel=3 --configuration=ci
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t coverage-badges --parallel=3
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t build --parallel=3
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t build-storybook --parallel=3 --configuration=ci
       # https://github.com/RobbyRabbitman/ngx/actions/runs/5548590199/jobs/10131779610
       # https://github.com/jscutlery/semver/issues/507
       # the version command fails in combination with affected and parallel > 1
-      - run: npx nx affected -t version --parallel=1
+      - run: npx nx affected --base=HEAD~1 --head=HEAD  -t version --parallel=1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --follow-tags
