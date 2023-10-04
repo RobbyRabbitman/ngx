@@ -5,9 +5,7 @@ describe('ifNonNull', () => {
   it('should execute the callback whenever a non nullish value was emitted', () => {
     const source = signal<number | undefined | null>(undefined);
 
-    const double = (x: number) => x * 2;
-
-    const doubled = ifNonNull(double)(source);
+    const doubled = ifNonNull(source, (x) => x * 2);
 
     expect(doubled()).toBeUndefined();
 
@@ -33,7 +31,7 @@ describe('ifNonNull', () => {
 
     const fn = jest.fn();
 
-    const value = ifNonNull(fn)(source);
+    const value = ifNonNull(source, fn);
 
     expect(fn).toHaveBeenCalledTimes(0);
 
@@ -56,7 +54,7 @@ describe('ifNonNull', () => {
 
     const otherSource = signal('foo');
 
-    const value = ifNonNull(otherSource)(source);
+    const value = ifNonNull(source, otherSource);
 
     expect(value()).toBeUndefined();
 
