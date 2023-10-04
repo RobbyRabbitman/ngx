@@ -114,9 +114,9 @@ export class ControlError {
 
   public readonly control$ = signal<AbstractControl | undefined>(undefined);
 
-  public readonly touched$ = ifNonNull(touched$)(this.control$);
+  public readonly touched$ = ifNonNull(this.control$, touched$);
 
-  public readonly dirty$ = ifNonNull(dirty$)(this.control$);
+  public readonly dirty$ = ifNonNull(this.control$, dirty$);
 
   public readonly status$ = toSignal(
     toObservable(this.control$).pipe(

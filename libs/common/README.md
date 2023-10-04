@@ -5,8 +5,8 @@ A collection of common Angular utilities.
 ## Features
 
 - Render SVG Icons
-- Signal Operators
-- Mixin a Generic Control Value Accessor Implementation
+- Signal Utilities
+- Control Value Accessor Mixin
 - Control Error
 - For In
 
