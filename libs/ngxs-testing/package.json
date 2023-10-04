@@ -1,6 +1,6 @@
 {
   "name": "@robby-rabbitman/ngxs-testing",
-  "version": "0.10.2",
+  "version": "0.10.1",
   "peerDependencies": {
     "@angular/common": ">=16.0.0",
     "@angular/core": ">=16.0.0"
