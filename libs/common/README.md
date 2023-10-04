@@ -7,6 +7,8 @@ A collection of common Angular utilities.
 - Render SVG Icons
 - Signal Operators
 - Mixin a Generic Control Value Accessor Implementation
+- Control Error
+- For In
 
 ## Docs
 
