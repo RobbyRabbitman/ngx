@@ -23,9 +23,8 @@ mkdir -p $tmpDir
 cp -r ./coverage/ $tmpDir/coverage/
 cp -r ./dist/storybook/ $tmpDir/storybook/
 
-git checkout -B artifacts origin/artifacts
+git checkout -B artifacts origin/artifacts -f
 git pull
-git restore --staged .
 
 cp -Tr $tmpDir/coverage/ coverage/
 cp -Tr $tmpDir/storybook/ storybook/
