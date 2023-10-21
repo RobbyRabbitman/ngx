@@ -1,0 +1,22 @@
+import { Meta, Source } from '@storybook/blocks';
+import log from '!!raw-loader!./if-non-null.log-effect.stories-example.ts';
+import computed from '!!raw-loader!./if-non-null.computed.stories-example.ts';
+import computedWithFactory from '!!raw-loader!./if-non-null.computed-with-factory.stories-example.ts';
+
+<Meta title="Common/Signals/IfNonNull" />
+
+# IfNonNull
+
+A utility function for less code and even more fun with signals.
+
+<Source code={log} language="typescript" />
+
+## Computed Examples
+
+Since the thenBranch and elseBranch args are functions, you can pass signals aswell:
+
+<Source code={computed} language="typescript" />
+
+Since the thenBranch and elseBranch args can also return signals, they can be used as a factory aswell:
+
+<Source code={computedWithFactory} language="typescript" />
