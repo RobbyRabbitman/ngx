@@ -1,3 +1,2 @@
-export const noop = <T extends (...args: any[]) => void>(
-  ...args: Parameters<T>
-) => undefined;
+export const noop = (..._args: Parameters<(..._args: unknown[]) => void>) =>
+  undefined;
