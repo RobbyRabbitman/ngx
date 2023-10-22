@@ -44,8 +44,10 @@ describe('ControlError', () => {
 
     expect(ngMocks.formatText(fixture)).toEqual('42');
 
-    expect(findInstance().context.$implicit).toEqual(true);
-    expect(findInstance().context.ngxControlErrorOf).toEqual(true);
+    expect(findInstance().context.$implicit).toEqual({ required: true });
+    expect(findInstance().context.ngxControlErrorOf).toEqual({
+      required: true,
+    });
     expect(findInstance().context.control).toEqual(params.control);
   });
 
@@ -389,10 +391,10 @@ describe('ControlError', () => {
 
     fixture.detectChanges();
 
-    expect(findInstance().context.$implicit).toBe(
+    expect(findInstance().context.$implicit).toEqual(
       findInstance().context.ngxControlErrorOf
     );
-    expect(findInstance().context.$implicit).toBe(true);
+    expect(findInstance().context.$implicit).toEqual({ required: true });
   });
 
   it('should reference the control in its context', () => {

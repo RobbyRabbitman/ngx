@@ -89,8 +89,8 @@ export const provideErrorStateMatcher = (errorStateMatcher: StateMatcher) =>
   } satisfies Provider);
 
 export interface ControlErrorContext {
-  $implicit: any | ValidationErrors;
-  ngxControlErrorOf: any | ValidationErrors;
+  $implicit: ValidationErrors;
+  ngxControlErrorOf: ValidationErrors;
   control: AbstractControl;
   track: string | string[];
 }
@@ -187,18 +187,15 @@ export class ControlError {
 
     if (hasError && control != null && track != null)
       this._viewContainerRef.createEmbeddedView(this._templateRef, {
-        $implicit:
-          typeof track === 'string'
-            ? control.getError(track)
-            : track
-                .filter((x) => control.hasError(x))
-                .reduce(
-                  (errors, x) => ({
-                    ...errors,
-                    [x]: control.getError(x),
-                  }),
-                  {}
-                ),
+        $implicit: (typeof track === 'string' ? [track] : track)
+          .filter((x) => control.hasError(x))
+          .reduce(
+            (errors, x) => ({
+              ...errors,
+              [x]: control.getError(x),
+            }),
+            {}
+          ),
         get ngxControlErrorOf() {
           return this.$implicit;
         },
