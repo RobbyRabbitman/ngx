@@ -1,5 +1,6 @@
 import { Component, Input, Signal, inject } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormsModule,
   NgControl,
@@ -68,7 +69,7 @@ describe('A MixinControlValueAccessor instance used as a host directive by a com
 
   const ngControl = () => ngMocks.findInstance(NgControl);
 
-  const control = () => ngControl().control!;
+  const control = () => ngControl().control as AbstractControl;
 
   beforeEach(() =>
     MockBuilder([
