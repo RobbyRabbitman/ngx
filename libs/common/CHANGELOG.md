@@ -2,6 +2,19 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [0.11.2](https://github.com/RobbyRabbitman/ngx/compare/common-0.11.1...common-0.11.2) (2023-10-22)
+
+
+### Bug Fixes
+
+* **common:** aligns single/multiple tracked errors ([#17](https://github.com/RobbyRabbitman/ngx/issues/17)) ([f1ca22e](https://github.com/RobbyRabbitman/ngx/commit/f1ca22e957330de719c2a0446fedc7261476040a))
+
+
+
+## [0.11.1](https://github.com/RobbyRabbitman/ngx/compare/common-0.11.0...common-0.11.1) (2023-10-21)
+
+
+
 # [0.11.0](https://github.com/RobbyRabbitman/ngx/compare/common-0.10.0...common-0.11.0) (2023-10-04)
 
 
