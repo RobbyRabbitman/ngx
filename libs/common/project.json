@@ -11,7 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "libs/common/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": false
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "configurations": {
         "production": {
@@ -41,7 +41,7 @@
       "command": "npx jest-coverage-badges --input 'coverage/libs/common/coverage-summary.json' --output 'coverage/libs/common/badges'"
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/common/**/*.ts", "libs/common/**/*.html"]

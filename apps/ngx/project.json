@@ -12,11 +12,12 @@
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "project": "apps/ngx/ng-package.json",
-        "tsConfig": "apps/ngx/tsconfig.lib.json"
+        "tsConfig": "apps/ngx/tsconfig.lib.json",
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/ngx/**/*.ts", "apps/ngx/**/*.html"]
