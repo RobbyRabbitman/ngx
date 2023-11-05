@@ -16,7 +16,13 @@ export type ForInIterable<T> =
  * A structural directive that renders a template for each key in an argument.
  *
  * ```html
- * <div *ngxFor="let key in someObject">{{ key }}</div>
+ * <li *ngxFor="let key in someObject">...</li>
+ * ```
+ *
+ * The context of this directive is the same like the {@link NgFor} provides. For example you can get a reference to the current index:
+ *
+ * ```html
+ * <li *ngxFor="let key in someObject; let index = index">...</li>
  * ```
  *
  * @see {@link ForInIterable}

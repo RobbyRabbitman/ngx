@@ -86,4 +86,66 @@ describe('ForInDirective', () => {
       )
     ).toThrowError("NGX Common: Can't iterate over 42");
   });
+
+  describe('should have a context indicating', () => {
+    it('the index of the current item in the iterable', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let index = index">{{ index }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('0 1 2'));
+
+    it('the length of the iterable', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let count = count">{{ count }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('3 3 3'));
+
+    it('whether the item is the first item in the iterable', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let first = first">{{ first }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('true false false'));
+
+    it('whether the item is the last item in the iterable', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let last = last">{{ last }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('false false true'));
+
+    it('whether the item has an even index in the iterable.', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let even = even">{{ even }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('true false true'));
+
+    it('whether the item has an odd index in the iterable.', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let odd = odd">{{ odd }} </ng-container>`,
+            { iterable: { foo: 42, bar: 99, baz: -1 } }
+          )
+        )
+      ).toBe('false true false'));
+  });
 });
