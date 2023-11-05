@@ -13,11 +13,14 @@ export type ForInIterable<T> =
   | string;
 
 /**
- * A structural directive that renders a template for each key in an argument.
- *
+ * A structural directive that renders a template for each own enumerable property of an object:
  * ```html
  * <li *ngxFor="let key in someObject">...</li>
  * ```
+ *
+ * The behavior is familar **BUT** not the *same* like JavaScript's {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in for...in}, which iterates over each own and inheritet enumerable property of an object.
+ * In addition when passing a {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map Map} or {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set Set}, it will iterate over the keys, using its keys() method.
+ *
  *
  * The context of this directive is the same like the {@link NgFor} provides. For example you can get a reference to the current index:
  *
@@ -53,8 +56,9 @@ export class ForIn<T> {
     // the iterable, the ngFor will iterate over
     let iterable: typeof this._ngFor.ngForOf = null;
 
-    // map => pluck keys into an array.
-    if (ngxForIn instanceof Map) iterable = [...ngxForIn.keys()];
+    // map or set => pluck keys into an array.
+    if (ngxForIn instanceof Map || ngxForIn instanceof Set)
+      iterable = [...ngxForIn.keys()];
     // any other object => use Object.keys
     // NOTE: must be checked after checking a Map, since a Map is an Object.
     else if (ngxForIn instanceof Object)
