@@ -2,7 +2,6 @@ import { NgFor } from '@angular/common';
 import { TrackByFunction } from '@angular/core';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
 import { ForIn } from './for-in';
-import exp = require('constants');
 
 describe('ForInDirective', () => {
   beforeEach(() => MockBuilder(ForIn).keep(NgFor));
@@ -142,6 +141,16 @@ describe('ForInDirective', () => {
         )
       ).toBe('3 3 3'));
 
+    it('the for in iterable', () =>
+      expect(
+        ngMocks.formatText(
+          MockRender(
+            `<ng-container *ngxFor="let key in iterable; let ngxForIn = ngxForIn">{{ ngxForIn }} </ng-container>`,
+            { iterable: 'foo' }
+          )
+        )
+      ).toBe('foo foo foo'));
+
     it('whether the item is the first item in the iterable', () =>
       expect(
         ngMocks.formatText(
@@ -231,5 +240,15 @@ describe('ForInDirective', () => {
       for (let index = 0; index < elementsBeforeCd.length; index++)
         expect(elementsBeforeCd[index]).toBe(elementsAfterCd[index]);
     });
+  });
+
+  it('should have a context guard', () => {
+    expect(
+      ForIn.ngTemplateContextGuard(
+        MockRender(`<ng-template ngxForIn></ng-template>`).point
+          .componentInstance as unknown as ForIn<unknown>,
+        {}
+      )
+    ).toBe(true);
   });
 });

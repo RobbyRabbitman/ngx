@@ -1,10 +1,14 @@
 import { NgFor, NgForOfContext } from '@angular/common';
 import {
   Directive,
+  DoCheck,
+  EmbeddedViewRef,
   Input,
   TemplateRef,
   TrackByFunction,
+  ViewContainerRef,
   inject,
+  signal,
 } from '@angular/core';
 import { throwCommonError } from '../error/common.errors';
 
@@ -22,7 +26,9 @@ export type ForInIterable<T> =
 /**
  * The type of the context of a template the {@link ForIn} directive renders.
  */
-export type ForInContext<T> = NgForOfContext<T>;
+export type ForInContext<T> = NgForOfContext<T> & {
+  ngxForIn: ForInIterable<T>;
+};
 
 /**
  * A structural directive that renders a template for each own enumerable property of an object:
@@ -51,7 +57,7 @@ export type ForInContext<T> = NgForOfContext<T>;
   standalone: true,
   hostDirectives: [NgFor],
 })
-export class ForIn<T> {
+export class ForIn<T> implements DoCheck {
   /**
    * This directive iterates over the enumerable properties of an argument, but its logic is equal to the built in {@link NgFor},
    * therefore it is used as a host directive, so that it can inherit its behavior.
@@ -60,8 +66,14 @@ export class ForIn<T> {
    */
   private readonly _ngFor: NgFor<T> = inject(NgFor);
 
+  private readonly _viewContainerRef = inject(ViewContainerRef);
+
+  private _ngxForIn$ = signal<ForInIterable<T>>(undefined);
+
   @Input('ngxForIn')
   public set ngxForIn(ngxForIn: ForInIterable<T>) {
+    this._ngxForIn$.set(ngxForIn);
+
     // the iterable, the ngFor will iterate over
     let iterable: typeof this._ngFor.ngForOf = null;
 
@@ -83,6 +95,10 @@ export class ForIn<T> {
     this._ngFor.ngForOf = iterable;
   }
 
+  public get ngxForIn() {
+    return this._ngxForIn$();
+  }
+
   /**
    * @see {@link NgFor.ngForTemplate}
    */
@@ -92,7 +108,7 @@ export class ForIn<T> {
   }
 
   public get ngxForTemplate() {
-    return this._ngFor.ngForTemplate;
+    return this._ngFor.ngForTemplate as TemplateRef<ForInContext<T>>;
   }
 
   /**
@@ -106,4 +122,30 @@ export class ForIn<T> {
   public get ngxForTrackBy() {
     return this._ngFor.ngForTrackBy;
   }
+
+  /**
+   * In the {@link NgFor.ngDoCheck} the context of the views are being set, use the ngDoCheck hook of this directive to add the ngxForIn property.
+   * This works, since the ngDoCheck of host directives are called before the ngDoCheck of the host.
+   *
+   * @ignore
+   */
+  public ngDoCheck(): void {
+    for (let index = 0; index < this._viewContainerRef.length; index++)
+      Object.assign(
+        (
+          this._viewContainerRef.get(index) as EmbeddedViewRef<
+            NgForOfContext<T>
+          >
+        ).context,
+        { ngxForIn: this._ngxForIn$() } as Pick<ForInContext<T>, 'ngxForIn'>
+      );
+  }
+
+  /**
+   * Asserts the correct type for this {@link ngxForTemplate}.
+   */
+  public static ngTemplateContextGuard = <T>(
+    directive: ForIn<T>,
+    context: unknown
+  ): context is ForInContext<T> => true;
 }
