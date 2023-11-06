@@ -137,7 +137,7 @@ export class ForIn<T> implements DoCheck {
             NgForOfContext<T>
           >
         ).context,
-        { ngxForIn: this._ngxForIn$() } as Pick<ForInContext<T>, 'ngxForIn'>
+        { ngxForIn: this._ngxForIn$() } satisfies Pick<ForInContext<T>, 'ngxForIn'>
       );
   }
 
