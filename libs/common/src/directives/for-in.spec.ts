@@ -1,6 +1,8 @@
 import { NgFor } from '@angular/common';
+import { TrackByFunction } from '@angular/core';
 import { MockBuilder, MockRender, ngMocks } from 'ng-mocks';
 import { ForIn } from './for-in';
+import exp = require('constants');
 
 describe('ForInDirective', () => {
   beforeEach(() => MockBuilder(ForIn).keep(NgFor));
@@ -10,16 +12,22 @@ describe('ForInDirective', () => {
 
   describe('should iterate over', () => {
     it('objects', () => {
-      const params = { iterable: { foo: true, bar: true } };
+      const params = {
+        iterable: { foo: true, bar: true } as Record<string, unknown>,
+      };
 
       const fixture = MockRender(
         `<ng-container *ngxFor="let key in iterable">{{ key }} </ng-container>`,
         params
       );
 
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar');
+
+      params.iterable = { ...params.iterable, baz: true };
+
       fixture.detectChanges();
 
-      expect(ngMocks.formatText(fixture)).toContain('foo bar');
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar baz');
     });
 
     it('maps', () => {
@@ -35,9 +43,11 @@ describe('ForInDirective', () => {
         params
       );
 
+      params.iterable = new Map(params.iterable).set('baz', true);
+
       fixture.detectChanges();
 
-      expect(ngMocks.formatText(fixture)).toEqual('foo bar');
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar baz');
     });
 
     it('sets', () => {
@@ -50,9 +60,13 @@ describe('ForInDirective', () => {
         params
       );
 
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar');
+
+      params.iterable = new Set(params.iterable).add('baz');
+
       fixture.detectChanges();
 
-      expect(ngMocks.formatText(fixture)).toEqual('foo bar');
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar baz');
     });
 
     it('strings', () => {
@@ -65,9 +79,13 @@ describe('ForInDirective', () => {
         params
       );
 
+      expect(ngMocks.formatText(fixture)).toEqual('0 1 2');
+
+      params.iterable = 'baz42';
+
       fixture.detectChanges();
 
-      expect(ngMocks.formatText(fixture)).toEqual('0 1 2');
+      expect(ngMocks.formatText(fixture)).toEqual('0 1 2 3 4');
     });
 
     it('nullish values', () => {
@@ -80,11 +98,10 @@ describe('ForInDirective', () => {
         params
       );
 
-      fixture.detectChanges();
-
       expect(ngMocks.formatText(fixture)).toEqual('');
 
       params.iterable = undefined;
+
       fixture.detectChanges();
 
       expect(ngMocks.formatText(fixture)).toEqual('');
@@ -166,5 +183,53 @@ describe('ForInDirective', () => {
       ).toBe('false true false'));
   });
 
-  test.todo('specify track by behavior');
+  describe('track by', () => {
+    it('with objects as keys of a map', () => {
+      const params = {
+        iterable: new Map([
+          [{ id: 'foo' }, 42],
+          [{ id: 'bar' }, 99],
+        ]),
+        trackBy: ((index, item) => item.id) as TrackByFunction<{ id: number }>,
+      };
+
+      const fixture = MockRender(
+        `<ng-container *ngxFor="let key in iterable; trackBy: trackBy"><span [id]="key.id">{{key.id}} </span></ng-container>`,
+        params
+      );
+
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar');
+      const fooBeforeCd = ngMocks.find('#foo');
+
+      params.iterable = new Map([
+        [{ id: 'foo' }, 42],
+        [{ id: 'bar' }, 99],
+        [{ id: 'baz' }, 1],
+      ]);
+
+      fixture.detectChanges();
+
+      const fooAfterCd = ngMocks.find('#foo');
+
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar baz');
+      expect(fooBeforeCd.nativeElement).toBe(fooAfterCd.nativeElement);
+
+      const elementsBeforeCd = ngMocks.findAll('span');
+
+      params.iterable = new Map([
+        [{ id: 'foo' }, 42],
+        [{ id: 'bar' }, 99],
+        [{ id: 'baz' }, 1],
+      ]);
+
+      fixture.detectChanges();
+
+      const elementsAfterCd = ngMocks.findAll('span');
+
+      expect(ngMocks.formatText(fixture)).toEqual('foo bar baz');
+
+      for (let index = 0; index < elementsBeforeCd.length; index++)
+        expect(elementsBeforeCd[index]).toBe(elementsAfterCd[index]);
+    });
+  });
 });
