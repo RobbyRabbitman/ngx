@@ -15,7 +15,7 @@ import { throwCommonError } from '../error/common.errors';
 /**
  * Types that can be used with the {@link ForIn} directive.
  */
-export type ForInIterable<T> =
+export type ForInTypes<T> =
   | null
   | undefined
   | Map<T, unknown>
@@ -27,7 +27,7 @@ export type ForInIterable<T> =
  * The type of the context of a template the {@link ForIn} directive renders.
  */
 export type ForInContext<T> = NgForOfContext<T> & {
-  ngxForIn: ForInIterable<T>;
+  ngxForIn: ForInTypes<T>;
 };
 
 /**
@@ -48,7 +48,7 @@ export type ForInContext<T> = NgForOfContext<T> & {
  *
  * @template T the type of the enumerable properties of the object being iterated over
  *
- * @see {@link ForInIterable}
+ * @see {@link ForInTypes}
  * @see {@link NgFor}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in for...in}
  */
@@ -68,10 +68,10 @@ export class ForIn<T> implements DoCheck {
 
   private readonly _viewContainerRef = inject(ViewContainerRef);
 
-  private _ngxForIn$ = signal<ForInIterable<T>>(undefined);
+  private _ngxForIn$ = signal<ForInTypes<T>>(undefined);
 
   @Input('ngxForIn')
-  public set ngxForIn(ngxForIn: ForInIterable<T>) {
+  public set ngxForIn(ngxForIn: ForInTypes<T>) {
     this._ngxForIn$.set(ngxForIn);
 
     // the iterable, the ngFor will iterate over
