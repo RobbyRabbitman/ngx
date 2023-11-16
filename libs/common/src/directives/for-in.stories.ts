@@ -1,32 +1,28 @@
-import { moduleMetadata, type Meta, type StoryObj } from '@storybook/angular';
-import { ForIn, ForInIterable } from '../directives/for-in';
+import { Meta, StoryObj } from '@storybook/angular';
+import { ForIn, ForInTypes } from './for-in';
 
 interface ForInArgs {
-  iterable: ForInIterable<unknown>;
+  object: ForInTypes<unknown>;
 }
 
 const meta = {
   title: 'Common/For in',
-  decorators: [
-    moduleMetadata({
-      imports: [ForIn],
-    }),
-  ],
+  component: ForIn,
   render: (args) => ({
     props: args,
-    template: `<div *ngxFor="let key in iterable">{{ key }}</div>`,
+    template: `<div *ngxFor="let key in object">{{ key }}</div>`,
   }),
 } satisfies Meta<ForInArgs>;
 
 export default meta;
 
 export const object = {
-  args: { iterable: { foo: 'what', bar: 'ever' } },
+  args: { object: { foo: 'what', bar: 'ever' } },
 } satisfies StoryObj<ForInArgs>;
 
 export const map = {
   args: {
-    iterable: new Map([
+    object: new Map([
       ['foo', 'what'],
       ['bar', 'ever'],
     ]),
@@ -35,6 +31,6 @@ export const map = {
 
 export const string = {
   args: {
-    iterable: 'whatever',
+    object: 'whatever',
   },
 } satisfies StoryObj<ForInArgs>;
