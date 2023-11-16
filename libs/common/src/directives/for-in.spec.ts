@@ -7,7 +7,36 @@ describe('ForInDirective', () => {
   beforeEach(() => MockBuilder(ForIn).keep(NgFor));
 
   it('should create an instance', () =>
-    expect(MockRender(`<ng-template ngxFor></ng-template>`)).toBeTruthy());
+    expect(MockRender(`<ng-template ngxFor ngxForIn />`)).toBeTruthy());
+
+  it('should support shorthand syntax', () => {
+    MockRender(`<ng-container *ngxFor="let index in 'foo'" />`);
+
+    expect(ngMocks.findInstance(ForIn).ngxForIn).toBe('foo');
+  });
+
+  it('should use the template of the host per default', () => {
+    let fixture = MockRender(
+      `<ng-container *ngxFor="let index in 'foo'" >host </ng-container>`
+    );
+
+    expect(ngMocks.formatText(fixture)).toEqual('host host host');
+
+    ngMocks.flushTestBed();
+
+    fixture = MockRender(
+      `
+      <ng-container *ngxFor="let index in 'foo'; template: someTemplate" >host </ng-container>
+      
+      <ng-template #someTemplate>template </ng-template>
+      `
+    );
+
+    expect(
+      ngMocks.findInstance(ForIn).ngxForTemplate.elementRef.nativeElement
+    ).toBe(ngMocks.findTemplateRef('someTemplate').elementRef.nativeElement);
+    expect(ngMocks.formatText(fixture)).toEqual('template template template');
+  });
 
   describe('should iterate over', () => {
     it('objects', () => {
@@ -192,8 +221,15 @@ describe('ForInDirective', () => {
       ).toBe('false true false'));
   });
 
-  describe('track by', () => {
-    it('with objects as keys of a map', () => {
+  describe('should track by', () => {
+    it('identity per default', () => {
+      MockRender(`<ng-template ngxFor ngxForIn/>`, {});
+
+      // proxies ngFor's trackBy which is undefined per default => object.is
+      expect(ngMocks.findInstance(ForIn).ngxForTrackBy).toBeUndefined();
+    });
+
+    it('a custom function when provided', () => {
       const params = {
         iterable: new Map([
           [{ id: 'foo' }, 42],
@@ -206,6 +242,10 @@ describe('ForInDirective', () => {
         `<ng-container *ngxFor="let key in iterable; trackBy: trackBy"><span [id]="key.id">{{key.id}} </span></ng-container>`,
         params
       );
+
+      expect(
+        ngMocks.findInstance(ForIn).ngxForTrackBy(0, { id: 'foo' })
+      ).toEqual('foo');
 
       expect(ngMocks.formatText(fixture)).toEqual('foo bar');
       const fooBeforeCd = ngMocks.find('#foo');
@@ -244,11 +284,7 @@ describe('ForInDirective', () => {
 
   it('should have a context guard', () => {
     expect(
-      ForIn.ngTemplateContextGuard(
-        MockRender(`<ng-template ngxForIn></ng-template>`).point
-          .componentInstance as unknown as ForIn<unknown>,
-        {}
-      )
+      ForIn.ngTemplateContextGuard(undefined as unknown as ForIn<unknown>, {})
     ).toBe(true);
   });
 });

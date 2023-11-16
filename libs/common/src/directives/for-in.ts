@@ -108,7 +108,9 @@ export class ForIn<T> implements DoCheck {
   }
 
   public get ngxForTemplate() {
-    return this._ngFor.ngForTemplate as TemplateRef<ForInContext<T>>;
+    return (
+      this._ngFor as unknown as { _template: TemplateRef<ForInContext<T>> }
+    )._template;
   }
 
   /**
